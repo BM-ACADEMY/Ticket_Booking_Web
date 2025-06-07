@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Button } from './components/ui/button'
 import './App.css'
+import Page from './module/dashboard/Page'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-    <div>this is new code</div>
-    <Button variant="secondary">click me</Button>
+      <Page />
     </>
   )
 }
