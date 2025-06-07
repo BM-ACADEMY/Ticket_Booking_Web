@@ -1,23 +1,17 @@
 "use client"
 
-import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
   SquareTerminal,
+  ScanQrCode ,Ticket ,Calendar,
+  NotebookPen,Users,
 } from "lucide-react"
 
+import Logo1 from "@/assets/images/logo1.jpg";
+
 import { NavMain } from "@/module/components/nav-main"
-import { NavProjects } from "@/module/components/nav-projects"
 import { NavUser } from "@/module/components/nav-user"
 import { TeamSwitcher } from "@/module/components/team-switcher"
+
 import {
   Sidebar,
   SidebarContent,
@@ -26,132 +20,66 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Bmtechx",
+    email: "bmtechx@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
     {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
+      name: "Pegasus",
+      logo: Logo1,
       plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
+    }
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Dashboard",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
+    },
+    {
+      title: "Ticket Booking",
+      url: "#",
+      icon: Ticket,
+    },
+    {
+      title: "QR Scanner",
+      url: "#",
+      icon: ScanQrCode ,
+    },
+    {
+      title: "Events",
+      url: "#",
+      icon: Calendar ,
+    },
+    {
+      title: "Attendance List",
+      url: "#",
+      icon: NotebookPen ,
       items: [
         {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
+          title: "Customers Attendance",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "New Members",
       url: "#",
-      icon: Bot,
+      icon: Users ,
       items: [
         {
-          title: "Genesis",
+          title: "Admin",
           url: "#",
         },
         {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
+          title: "Sub Admin",
           url: "#",
         },
       ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
@@ -164,7 +92,6 @@ export function AppSidebar({ ...props }) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
