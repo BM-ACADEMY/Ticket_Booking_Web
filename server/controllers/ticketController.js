@@ -1,15 +1,27 @@
 const Ticket = require('../models/ticketModel');
 
 // Create new ticket
+// Create new ticket(s)
 exports.createTicket = async (req, res) => {
   try {
-    const ticket = new Ticket(req.body);
-    await ticket.save();
-    res.status(201).json({success:true, message: 'Ticket created successfully', ticket });
+    const payload = req.body;
+
+    if (!Array.isArray(payload)) {
+      // If it's a single ticket, insert one
+      const ticket = new Ticket(payload);
+      await ticket.save();
+      return res.status(201).json({ success: true, message: 'Ticket created successfully', ticket });
+    } else {
+      // If it's an array of tickets, insert many
+      const tickets = await Ticket.insertMany(payload);
+      return res.status(201).json({ success: true, message: 'Tickets created successfully', tickets });
+    }
+
   } catch (error) {
-    res.status(500).json({success:false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 // Get all tickets
 exports.getAllTickets = async (req, res) => {
@@ -49,17 +61,37 @@ exports.getTicketById = async (req, res) => {
 };
 
 // Update ticket by ID
+// Update a ticket by ID
 exports.updateTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { id } = req.params;
 
-    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    const updatedTicket = await Ticket.findByIdAndUpdate(id, req.body, {
+      new: true,             // Return the updated document
+      runValidators: true    // Ensure model validations are applied
+    });
 
-    res.status(200).json({success:true, message: 'Ticket updated successfully', ticket });
+    if (!updatedTicket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Ticket updated successfully',
+      ticket: updatedTicket,
+    });
   } catch (error) {
-    res.status(500).json({success:false, error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update ticket',
+      error: error.message,
+    });
   }
 };
+
 
 // Delete ticket by ID
 exports.deleteTicket = async (req, res) => {

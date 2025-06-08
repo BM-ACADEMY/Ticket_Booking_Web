@@ -7,6 +7,7 @@ import PrivateRoute from "@/module/auth/PrivateRoute";
 import LoginRoute from "@/module/auth/LoginRoute"; // ✅ Import LoginRoute
 import ForgotPasswordForm from "./module/pages/ForgotPasswordForm";
 import ResetPasswordForm from "./module/pages/ResetPasswordForm";
+import Events from "./module/pages/Events";
 
 
 function App() {
@@ -25,6 +26,8 @@ function App() {
           />
           <Route path="/forgot-password" element={<ForgotPasswordForm />} />
           <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
+          <Route path="/shows/new" element={<Events />} />
+          <Route path="/shows/edit/:id" element={<Events />} />
 
           {/* Private Routes */}
           <Route element={<PrivateRoute />}>
