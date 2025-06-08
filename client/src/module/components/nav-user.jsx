@@ -1,9 +1,12 @@
+// NavUser.jsx
 "use client"
 
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/module/context/AuthContext"
 import {
   BadgeCheck,
   ChevronsUpDown,
-  FileClock ,
+  FileClock,
   LogOut,
 } from "lucide-react"
 
@@ -28,10 +31,35 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user,
-}) {
+import axios from "axios"
+
+const getInitials = (name = "") =>
+  name
+    .split(" ")
+    .map((word) => word[0]?.toUpperCase())
+    .slice(0, 2)
+    .join("")
+
+export function NavUser() {
   const { isMobile } = useSidebar()
+  const { logout, user } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/logout`,
+        {},
+        { withCredentials: true }
+      )
+      logout()
+      navigate("/login")
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
+  }
+
+  if (!user) return null // avoid rendering before user is loaded
 
   return (
     <SidebarMenu>
@@ -44,7 +72,9 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">PS</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {getInitials(user.name)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -53,6 +83,7 @@ export function NavUser({
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
@@ -63,7 +94,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">PS</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -71,20 +104,24 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator/>
+
+            <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
+              <DropdownMenuItem onClick={()=>navigate('/account')}>
+                <BadgeCheck className="mr-2 h-4 w-4"  />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <FileClock  />
+                <FileClock className="mr-2 h-4 w-4" />
                 History
               </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
+
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
