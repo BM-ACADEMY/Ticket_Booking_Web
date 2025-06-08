@@ -25,6 +25,11 @@ const ticketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Decimal128,
       required: true,
     },
+    qr_code_link:{
+      type: String,
+      // required: true,
+      default: null,
+    },
     payment_method: {
       type: String,
       enum: ['GPay', 'Cash', 'Mess Bill'],

@@ -4,7 +4,7 @@ const showController = require("../controllers/showController");
 const upload = require("../middleware/upload");
 
 // GET all shows
-router.get("/fet-all-shows", showController.getAllShows);
+router.get("/fetch-all-shows", showController.getAllShows);
 
 // GET single show by ID
 router.get("/fetch-show-by-id/:id", showController.getShowById);
