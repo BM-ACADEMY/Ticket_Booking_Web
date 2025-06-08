@@ -3,6 +3,19 @@ const router = express.Router();
 const { verifyAdminToken } = require("../middleware/auth"); // adjust path
 const adminController = require("../controllers/adminController"); 
 
+// verify the admin login or sub-admin login
+
+// GET /api/admin/me
+router.get("/verify-me", verifyAdminToken, (req, res) => {
+  res.status(200).json({ admin: req.admin });
+});
+
+// POST forgot password
+router.post("/forgot-password", adminController.forgotPassword);
+
+// POST reset password
+router.post("/reset-password/:token", adminController.resetPassword);
+
 // GET all admins
 router.get("/fetch-all-admin-and-subAdmin",verifyAdminToken ,adminController.getAllAdminsAndSubAdmins);
 

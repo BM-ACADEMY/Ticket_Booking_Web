@@ -16,10 +16,15 @@ const showSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    price:{
+      type: Number,
+      required: true,
+      min: 0,
+    },
     logo: {
-      type: String, // This will store the image path or URL
+      type: String, 
       trim: true,
-      default: "",  // Optional: default empty if not provided
+      default: "",  
     },
   },
   {

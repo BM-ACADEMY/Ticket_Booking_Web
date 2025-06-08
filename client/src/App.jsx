@@ -2,18 +2,31 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/module/context/AuthContext";
 import Page from "@/module/dashboard/Page";
 import { routes } from "@/routes";
-import LoginPage from "@/module/pages/LoginPage"; // import your login page
+import LoginPage from "@/module/pages/LoginPage";
 import PrivateRoute from "@/module/auth/PrivateRoute";
+import LoginRoute from "@/module/auth/LoginRoute"; // ✅ Import LoginRoute
+import ForgotPasswordForm from "./module/pages/ForgotPasswordForm";
+import ResetPasswordForm from "./module/pages/ResetPasswordForm";
+
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public Route (No Layout) */}
-          <Route path="/login" element={<LoginPage />} />
+          {/* Public Route with LoginRoute wrapper to prevent logged-in users from seeing login again */}
+          <Route
+            path="/login"
+            element={
+              <LoginRoute>
+                <LoginPage />
+              </LoginRoute>
+            }
+          />
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
 
-          {/* Private Routes (With Layout) */}
+          {/* Private Routes */}
           <Route element={<PrivateRoute />}>
             <Route element={<Page />}>
               {routes.map((route, index) => (

@@ -32,15 +32,17 @@ exports.getShowById = async (req, res) => {
 // Create a new show
 exports.createShow = async (req, res) => {
   try {
-    const { title, location, datetime } = req.body;
+    const { title, location, datetime,price } = req.body;
+    console.log(req.body,"dlfnd");
+    
     let logoPath = "";
 
     if (req.file) {
       const folder = title.replace(/\s+/g, "_");
-      logoPath = `/uploads/${folder}/${req.file.filename}`;
+      logoPath = `${process.env.CORS_ORIGIN}/uploads/${folder}/${req.file.filename}`;
     }
 
-    const newShow = new Show({ title, location, datetime, logo: logoPath });
+    const newShow = new Show({ title, location, datetime,price, logo: logoPath });
     await newShow.save();
     res.status(201).json({
       success: true,
@@ -60,7 +62,7 @@ exports.updateShow = async (req, res) => {
     if (req.file) {
       const title = req.body.title || "default";
       const folder = title.replace(/\s+/g, "_");
-      logoPath = `/uploads/${folder}/${req.file.filename}`;
+      logoPath = `${process.env.CORS_ORIGIN}/uploads/${folder}/${req.file.filename}`;
     }
 
     const updatedShow = await Show.findByIdAndUpdate(

@@ -1,69 +1,83 @@
+import { useState } from "react"
+import axios from "axios"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import logo1 from "@/assets/images/logo1.jpg"
+import { useAuth } from "../context/AuthContext"
+import { useNavigate ,Link} from "react-router-dom"
 
 const LoginForm = ({ className, ...props }) => {
+  const [emailOrPhone, setEmailOrPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/login`,
+      { emailOrPhone, password },
+      { withCredentials: true } // ⬅️ necessary for cookie
+    );
+
+     login(response.data.admin) // set context state
+    console.log("Login successful:", response.data);
+    navigate("/");
+  } catch (error) {
+    console.error("Login failed:", error.response?.data || error.message);
+  }
+};
+
   return (
     <div
       className={cn("flex min-h-screen items-center justify-center p-4", className)}
       {...props}
     >
+  
       <Card className="w-full max-w-5xl shadow-lg overflow-hidden">
         <CardContent className="grid grid-cols-1 md:grid-cols-2 p-0">
           {/* Left - Login Form */}
           <div className="flex items-center justify-center p-6 md:p-12">
-            <form className="w-full max-w-md space-y-6">
+            <form className="w-full max-w-md space-y-6" onSubmit={handleSubmit}>
               <div className="text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
+                <h1 className="text-2xl font-bold">Welcome back pegasus</h1>
                 <p className="text-muted-foreground text-sm">
-                  Login to your  account
+                  Login to your account
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" required />
+                <Label htmlFor="emailOrPhone">Email or Phone Number</Label>
+                <Input
+                  id="emailOrPhone"
+                  type="text"
+                  placeholder="m@example.com or 34567890"
+                  required
+                  value={emailOrPhone}
+                  onChange={(e) => setEmailOrPhone(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-sm underline-offset-2 hover:underline">
+                  <Link to="/forgot-password" className="text-sm underline-offset-2 hover:underline">
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full cursor-pointer">
                 Login
               </Button>
-              {/* <div className="relative text-center text-sm">
-                <div className="absolute inset-0 top-1/2 border-t" />
-                <span className="relative bg-white px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" type="button" className="w-full">
-                  <span className="sr-only">Login with Apple</span>
-                  🍎
-                </Button>
-                <Button variant="outline" type="button" className="w-full">
-                  <span className="sr-only">Login with Google</span>
-                  🔍
-                </Button>
-                <Button variant="outline" type="button" className="w-full">
-                  <span className="sr-only">Login with Meta</span>
-                  📘
-                </Button>
-              </div> */}
-              {/* <div className="text-center text-sm">
-                Don’t have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
-                  Sign up
-                </a>
-              </div> */}
             </form>
           </div>
 

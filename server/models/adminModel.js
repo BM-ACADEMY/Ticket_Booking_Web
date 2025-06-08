@@ -22,6 +22,10 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    token:{
+      type: String,
+      default: null, // Used for password reset or email verification
+    },
     role_id: {
       type: String,
       required: true,
