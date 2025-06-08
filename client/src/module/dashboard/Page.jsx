@@ -13,9 +13,31 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Outlet,useLocation,Link } from "react-router-dom"
 
 
-const Page=()=> {
+
+// Optional: Mapping for friendly names
+const breadcrumbNameMap = {
+  dashboard: "Dashboard",
+  "ticket-booking": "Ticket Booking",
+  "qr-scanner": "QR Scanner",
+  events: "Events",
+  "attendance-list": "Attendance List",
+  "new-members": "New Members",
+  admin: "Admin",
+  "sub-admin": "Sub Admin",
+};
+
+const formatSegment = (segment) => {
+  return breadcrumbNameMap[segment] || segment.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+const Page=({children })=> {
+const location = useLocation();
+  const paths = location.pathname.split("/").filter(Boolean); // ['new-members', 'admin']
+
+  const buildPath = (index) => "/" + paths.slice(0, index + 1).join("/");
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -29,31 +51,37 @@ const Page=()=> {
             />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
+                {paths.length === 0 ? (
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Home</BreadcrumbPage>
+                  </BreadcrumbItem>
+                ) : (
+                  paths.map((segment, index) => (
+                    <BreadcrumbItem key={index}>
+                      {index < paths.length - 1 ? (
+                        <>
+                          <BreadcrumbLink asChild>
+                            <Link to={buildPath(index)}>
+                              {formatSegment(segment)}
+                            </Link>
+                          </BreadcrumbLink>
+                          <BreadcrumbSeparator />
+                        </>
+                      ) : (
+                        <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
+                      )}
+                    </BreadcrumbItem>
+                  ))
+                )}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-         
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-          </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
-        </div>
+
+        <main className="flex-1 p-4">{children || <Outlet />}</main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
 
 export default Page;

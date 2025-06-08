@@ -10,7 +10,7 @@ const roleSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      enum: ['Primary Admin', 'Secondary Admin'],
+      enum: ['Admin', 'subAdmin'],
     },
   },
   {

@@ -16,6 +16,11 @@ const showSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    logo: {
+      type: String, // This will store the image path or URL
+      trim: true,
+      default: "",  // Optional: default empty if not provided
+    },
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: false },

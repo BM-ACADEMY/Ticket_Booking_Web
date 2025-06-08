@@ -5,9 +5,13 @@ exports.createAttendance = async (req, res) => {
   try {
     const attendance = new Attendance(req.body);
     await attendance.save();
-    res.status(201).json(attendance);
+    res.status(201).json({
+      success: true,
+      message: 'Attendance record created successfully',
+      attendance: attendance,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({success:false, message: error.message });
   }
 };
 
@@ -18,9 +22,13 @@ exports.getAllAttendance = async (req, res) => {
       .populate('user_id', 'name email')
       .populate('show_id', 'title datetime')
       .populate('marked_by_admin_id', 'name email');
-    res.json(attendanceList);
+    res.json({
+      success: true,
+      message: 'Attendance records retrieved successfully',
+      attendance: attendanceList,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({success:false, message: error.message });
   }
 };
 
@@ -34,9 +42,13 @@ exports.getAttendanceById = async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
-    res.json(attendance);
+    res.json({
+      success: true,
+      message: 'Attendance record retrieved successfully',
+      attendance: attendance,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({success:false, message: error.message });
   }
 };
 
@@ -51,9 +63,13 @@ exports.updateAttendance = async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
-    res.json(attendance);
+    res.json({
+      success: true,
+      message: 'Attendance record updated successfully',
+      attendance: attendance,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({success:false, message: error.message });
   }
 };
 
@@ -64,8 +80,8 @@ exports.deleteAttendance = async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
-    res.json({ message: 'Attendance record deleted successfully' });
+    res.json({success:true, message: 'Attendance record deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({success:false, message: error.message });
   }
 };

@@ -5,9 +5,9 @@ exports.createTicket = async (req, res) => {
   try {
     const ticket = new Ticket(req.body);
     await ticket.save();
-    res.status(201).json({ message: 'Ticket created successfully', ticket });
+    res.status(201).json({success:true, message: 'Ticket created successfully', ticket });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({success:false, error: error.message });
   }
 };
 
@@ -18,9 +18,13 @@ exports.getAllTickets = async (req, res) => {
       .populate('user_id', 'name email phone')
       .populate('show_id', 'title location datetime')
       .populate('created_by', 'name email');
-    res.status(200).json(tickets);
+    res.status(200).json({
+      success: true,
+      message: 'Tickets retrieved successfully',
+      data: tickets
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({success:false, error: error.message });
   }
 };
 
@@ -34,9 +38,13 @@ exports.getTicketById = async (req, res) => {
 
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    res.status(200).json(ticket);
+    res.status(200).json({
+      success: true,
+      message: 'Ticket retrieved successfully',
+      data: ticket
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({success:false, error: error.message });
   }
 };
 
@@ -47,9 +55,9 @@ exports.updateTicket = async (req, res) => {
 
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    res.status(200).json({ message: 'Ticket updated successfully', ticket });
+    res.status(200).json({success:true, message: 'Ticket updated successfully', ticket });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({success:false, error: error.message });
   }
 };
 
@@ -60,7 +68,7 @@ exports.deleteTicket = async (req, res) => {
 
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    res.status(200).json({ message: 'Ticket deleted successfully' });
+    res.status(200).json({success:false, message: 'Ticket deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
