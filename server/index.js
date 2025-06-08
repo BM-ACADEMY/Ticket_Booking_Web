@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
+
 // Import routes
 const roleRoutes = require("./routes/roleRoute");
 const adminRoutes = require("./routes/adminRoute"); 
@@ -23,10 +24,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173", 
+  origin: process.env.CORS_ORIGIN, 
   credentials: true,
 }));
 app.use(express.json());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
