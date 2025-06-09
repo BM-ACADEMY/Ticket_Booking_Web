@@ -92,8 +92,18 @@ const data = {
   },
   {
     title: "Ticket Booking",
-    url: "/ticket-booking",
+    url: "#",
     icon: Ticket,
+     items: [
+      {
+        title: "Sell Tickets",
+        url: "/Ticket-Booking/ticket-booking",
+      },
+      {
+        title: "Ticket List",
+        url: "/Ticket-Booking/ticket-booking-list",
+      },
+    ],
   },
   {
     title: "QR Scanner",

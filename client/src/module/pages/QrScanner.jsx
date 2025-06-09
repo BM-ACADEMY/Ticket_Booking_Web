@@ -1,14 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { Button } from "@/components/ui/button";
+import { ScanLine, Copy, Check, ExternalLink, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+
 const QrScanner = () => {
   const [scanResult, setScanResult] = useState(null);
   const [cameraStarted, setCameraStarted] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
   const scannerRef = useRef(null);
 
   const startScanner = () => {
     setCameraStarted(true);
-    
-    // This will be initialized after user grants permission
   };
 
   const stopScanner = () => {
@@ -17,7 +28,6 @@ const QrScanner = () => {
         console.error("Failed to clear html5QrcodeScanner.", error);
       });
       setCameraStarted(false);
-      setScanResult(null);
     }
   };
 
@@ -26,7 +36,7 @@ const QrScanner = () => {
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "qr-reader",
-      { 
+      {
         fps: 10,
         qrbox: 250,
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
@@ -36,78 +46,104 @@ const QrScanner = () => {
 
     scannerRef.current = html5QrcodeScanner;
 
-    const onScanSuccess = (decodedText, decodedResult) => {
+    const onScanSuccess = (decodedText) => {
       setScanResult(decodedText);
-      // You can optionally stop the scanner after successful scan:
-      // stopScanner();
+      setShowDialog(true);
+      stopScanner();
     };
 
     const onScanFailure = (error) => {
-      // Handle scan failure
       console.warn(`QR scan error: ${error}`);
     };
 
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
     return () => {
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear().catch(error => {
-          console.error("Failed to clear html5QrcodeScanner.", error);
-        });
-      }
+      html5QrcodeScanner.clear().catch(error => {
+        console.error("Failed to clear html5QrcodeScanner.", error);
+      });
     };
   }, [cameraStarted]);
 
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(scanResult);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Copy failed", error);
+    }
+  };
+
+  const openInNewTab = () => {
+    if (scanResult) {
+      window.open(scanResult, "_blank");
+    }
+  };
+
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <h1>QR Code Scanner</h1>
-      
+    <div className="max-w-xl mx-auto p-6 text-center pt-24">
+      {!cameraStarted && (
+        <ScanLine className="mx-auto mb-6 w-24 h-24 text-black" />
+      )}
+
+      <h1 className="text-2xl font-semibold mb-4">QR Code Scanner</h1>
+
       {!cameraStarted ? (
-        <button 
-          onClick={startScanner}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
+        <Button onClick={startScanner}>
           Start Scanner
-        </button>
+        </Button>
       ) : (
         <>
-          <button 
+          <div id="qr-reader" className="w-full mx-auto mb-4" />
+          <Button
             onClick={stopScanner}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#f44336',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginBottom: '20px'
-            }}
+            
           >
             Stop Scanner
-          </button>
-          <div id="qr-reader" style={{ width: '100%' }}></div>
+          </Button>
         </>
       )}
-      
-      {scanResult && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Scan Result:</h3>
-          <p>{scanResult}</p>
-        </div>
-      )}
+
+      {/* Dialog for showing scan result */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan Result</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-700 whitespace-pre-wrap break-all">{scanResult}</p>
+         <DialogFooter className="flex gap-2 justify-end items-center">
+          <Button
+            variant="outline"
+            onClick={openInNewTab}
+            className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Open
+          </Button>
+          <Button
+            variant="outline"
+            onClick={copyToClipboard}
+            className="hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-2 text-green-600" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
 
 export default QrScanner;
-
-
