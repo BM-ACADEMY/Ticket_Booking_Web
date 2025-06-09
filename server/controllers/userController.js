@@ -34,8 +34,8 @@ exports.getUserById = async (req, res) => {
 // Create new user
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, phone, notes, is_offline } = req.body;
-    const newUser = new User({ name, email, phone, notes, is_offline });
+    const { name, phone, notes, is_offline } = req.body;
+    const newUser = new User({ name, phone, notes, is_offline });
     await newUser.save();
     res.status(201).json({
       success: true,
@@ -46,6 +46,8 @@ exports.createUser = async (req, res) => {
     res.status(400).json({success:false, message: "Failed to create user", error: err });
   }
 };
+
+
 
 // Update user by ID
 exports.updateUser = async (req, res) => {

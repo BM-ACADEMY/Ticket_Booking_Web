@@ -13,7 +13,7 @@ import { useAuth } from "@/module/context/AuthContext";
 const TicketBookingForm = ({ shows }) => {
     const [userInfo, setUserInfo] = useState({
         name: "",
-        email: "",
+    
         phone: "",
         notes: "",
     });
@@ -83,7 +83,7 @@ const TicketBookingForm = ({ shows }) => {
 
         console.log(method,'method');
         
-        if (!userInfo.name || !userInfo.email || !userInfo.phone || selectedShows.length === 0) {
+        if (!userInfo.name || !userInfo.phone || selectedShows.length === 0) {
             toast.error("Please fill all required fields and select at least one show.");
             return;
         }
@@ -141,21 +141,7 @@ const TicketBookingForm = ({ shows }) => {
                         required
                     />
                 </div>
-                <div>
-                    <Label htmlFor="email" className="mb-3  flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Email
-                    </Label>
-                    <Input
-                        id="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        type="email"
-                        value={userInfo.email}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
+            
                 <div>
                     <Label htmlFor="phone" className="mb-3  flex items-center gap-2">
                         <Phone className="w-4 h-4" />
