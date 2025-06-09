@@ -24,7 +24,7 @@ import {
 import { Search } from "lucide-react"
 
 import { useAuth } from "@/module/context/AuthContext"
-import logo2 from "@/assets/images/logo2.png"
+import logo2 from "@/assets/images/logo4.png"
 
 const breadcrumbNameMap = {
   dashboard: "Dashboard",
@@ -147,8 +147,8 @@ const Page = ({ children }) => {
 
           {/* Right: Logo + User name */}
           <div className="flex items-center gap-2">
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center rounded-lg overflow-hidden w-12 h-12 shrink-0">
-              {renderLogo(`${logo2}`, "w-10 h-10", user?.name)}
+           <div className="bg-sidebar-primary flex items-center brightness-150 justify-center rounded-lg overflow-hidden w-13 h-13 shrink-0">
+              {renderLogo(`${logo2}`, "w-12 h-12", user?.name)}
             </div>
             {/* <span className="text-sm font-medium truncate max-w-[120px]">
               {user?.name || "User"}
