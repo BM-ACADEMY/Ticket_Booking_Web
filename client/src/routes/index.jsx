@@ -8,11 +8,13 @@ import CustomersAttendance from "@/module/pages/CustomerAttendanceList";
 import AdminList from "@/module/pages/adminPage";
 import SubAdminList from "@/module/pages/SubAdminPage";
 import UserProfileUpdateForm from "@/module/pages/UserProfileUpdateForm";
+import UserTicketTable from "@/module/pages/ticketBooking/TicketBookingList"
 
 export const routes = [
   { path: "/", element: <Navigate to="/dashboard" /> },
   { path: "/dashboard", element: <Dashboard /> },
-  { path: "/ticket-booking", element: <TicketBooking /> },
+  { path: "/Ticket-Booking/ticket-booking", element: <TicketBooking /> },
+  { path: "/Ticket-Booking/ticket-booking-list", element: <UserTicketTable /> },
   { path: "/qr-scanner", element: <QRScanner /> },
   { path: "/events", element: <Events /> },
   { path: "/attendance-list/customers", element: <CustomersAttendance /> },

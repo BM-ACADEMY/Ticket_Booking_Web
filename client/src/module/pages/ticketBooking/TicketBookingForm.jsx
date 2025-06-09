@@ -13,7 +13,6 @@ import { useAuth } from "@/module/context/AuthContext";
 const TicketBookingForm = ({ shows }) => {
     const [userInfo, setUserInfo] = useState({
         name: "",
-    
         phone: "",
         notes: "",
     });
