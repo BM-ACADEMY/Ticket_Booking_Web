@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import logo1 from "@/assets/images/logo1.jpg"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate ,Link} from "react-router-dom"
+import { toast } from "react-toastify"
 
 const LoginForm = ({ className, ...props }) => {
   const [emailOrPhone, setEmailOrPhone] = useState("")
@@ -23,11 +24,12 @@ const handleSubmit = async (e) => {
       { emailOrPhone, password },
       { withCredentials: true } // ⬅️ necessary for cookie
     );
-
+    toast.success("Login successful!");
      login(response.data.admin) // set context state
     console.log("Login successful:", response.data);
     navigate("/");
   } catch (error) {
+    toast.error("Login failed. Please check your credentials.");
     console.error("Login failed:", error.response?.data || error.message);
   }
 };

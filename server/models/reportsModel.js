@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const reportSchema = new mongoose.Schema({
   admin_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Admins',
+    ref: 'Admin',
     required: true,
   },
   report_date: {
@@ -12,7 +12,7 @@ const reportSchema = new mongoose.Schema({
   },
   show_ids: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Shows',
+    ref: 'Show',
   }],
   generated_at: {
     type: Date,

@@ -30,7 +30,9 @@ exports.getUserById = async (req, res) => {
       data: user,
     });
   } catch (err) {
-    res.status(500).json({ success:false,message: "Server error", error: err });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err });
   }
 };
 
@@ -46,10 +48,11 @@ exports.createUser = async (req, res) => {
       data: newUser,
     });
   } catch (err) {
-    res.status(400).json({success:false, message: "Failed to create user", error: err });
+    res
+      .status(400)
+      .json({ success: false, message: "Failed to create user", error: err });
   }
 };
-
 
 exports.getUserTicketShowDetails = async (req, res) => {
   try {
@@ -80,8 +83,8 @@ exports.getUserTicketShowDetails = async (req, res) => {
           from: "users",
           localField: "user_id",
           foreignField: "_id",
-          as: "user"
-        }
+          as: "user",
+        },
       },
       { $unwind: "$user" },
       {
@@ -89,8 +92,8 @@ exports.getUserTicketShowDetails = async (req, res) => {
           from: "shows",
           localField: "show_id",
           foreignField: "_id",
-          as: "show"
-        }
+          as: "show",
+        },
       },
       { $unwind: "$show" },
       {
@@ -104,19 +107,21 @@ exports.getUserTicketShowDetails = async (req, res) => {
           qr_id: { $first: "$user.qr_id" },
           shows: {
             $push: {
+              ticket_id: "$_id", // ✅ include ticket _id here
+              show_id: "$show._id",
               show_title: "$show.title",
               show_logo: "$show.logo",
               location: "$show.location",
               datetime: "$show.datetime",
               ticket_count: "$ticket_count",
               amount: { $toDouble: "$amount" },
-              payment_method: "$payment_method"
-            }
-          }
-        }
+              payment_method: "$payment_method",
+            },
+          },
+        },
       },
       { $skip: (Number(page) - 1) * Number(limit) },
-      { $limit: Number(limit) }
+      { $limit: Number(limit) },
     ]);
 
     const totalUsers = await Ticket.distinct("user_id", matchDate);
@@ -128,17 +133,14 @@ exports.getUserTicketShowDetails = async (req, res) => {
         total: totalUsers.length,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(totalUsers.length / limit)
-      }
+        totalPages: Math.ceil(totalUsers.length / limit),
+      },
     });
-
   } catch (error) {
     console.error("Error in getUserTicketShowDetails:", error);
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
-
-
 
 // Update user by ID
 exports.updateUser = async (req, res) => {
@@ -155,7 +157,9 @@ exports.updateUser = async (req, res) => {
       data: updatedUser,
     });
   } catch (err) {
-    res.status(400).json({success:false, message: "Failed to update user", error: err });
+    res
+      .status(400)
+      .json({ success: false, message: "Failed to update user", error: err });
   }
 };
 
@@ -165,8 +169,12 @@ exports.deleteUser = async (req, res) => {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     if (!deletedUser)
       return res.status(404).json({ message: "User not found" });
-    res.status(200).json({success:true, message: "User deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "User deleted successfully" });
   } catch (err) {
-    res.status(500).json({success:false, message: "Server error", error: err });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err });
   }
 };

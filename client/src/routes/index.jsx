@@ -9,6 +9,7 @@ import AdminList from "@/module/pages/adminPage";
 import SubAdminList from "@/module/pages/SubAdminPage";
 import UserProfileUpdateForm from "@/module/pages/UserProfileUpdateForm";
 import UserTicketTable from "@/module/pages/ticketBooking/TicketBookingList"
+import ReportList from "@/module/pages/reports/ReportList";
 
 export const routes = [
   { path: "/", element: <Navigate to="/dashboard" /> },
@@ -23,5 +24,9 @@ export const routes = [
   {
     path: "/account",
     element: <UserProfileUpdateForm />,
+  },
+  {
+    path: "/history",
+    element: <ReportList />,
   },
 ];
