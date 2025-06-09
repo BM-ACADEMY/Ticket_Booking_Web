@@ -22,18 +22,20 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    token:{
+    token: {
       type: String,
       default: null, // Used for password reset or email verification
     },
     role_id: {
       type: String,
       required: true,
-      ref: 'Role', // references Roles.role_id
+      ref: "Role", // references Roles.role_id
     },
+    email_otp: { type: Number },
+    email_verified: { type: Boolean, default: false },
   },
   {
-    timestamps: { createdAt: 'created_at', updatedAt: false },
+    timestamps: { createdAt: "created_at", updatedAt: false },
   }
 );
 

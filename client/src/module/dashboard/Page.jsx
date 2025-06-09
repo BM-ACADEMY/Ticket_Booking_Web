@@ -69,7 +69,7 @@ const Page = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar closeSidebar={() => setIsOpen(false)} />
       <SidebarInset>
         {/* Header */}
         <header className="flex h-16 items-center justify-between gap-4 px-4 border-b">

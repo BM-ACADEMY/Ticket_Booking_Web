@@ -31,6 +31,9 @@ router.get("/:id", verifyAdminToken,adminController.getAdminById);
 // POST create admin
 router.post("/create-admin-and-subAdmin", adminController.createAdmin);
 
+// verify admin or sub-admin email
+router.post("/verify-otp", adminController.verifyOtp);
+
 // POST admin login
 router.post("/login", adminController.adminLogin);
 

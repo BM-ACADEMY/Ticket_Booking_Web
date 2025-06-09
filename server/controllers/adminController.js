@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const Role = require("../models/roleModel"); // adjust path if needed
 const sendMail = require("../utils/sendMail");
 const crypto = require("crypto");
-
+const nodemailer = require("nodemailer");
 // Get all admins
 exports.getAllAdminsAndSubAdmins = async (req, res) => {
   try {
@@ -238,14 +238,15 @@ exports.getAdminById = async (req, res) => {
 exports.createAdmin = async (req, res) => {
   try {
     const { name, email, phone, password, confirmPassword, role_id } = req.body;
-
+    console.log(req.body, "create admin body");
+    
     // Check if password and confirmPassword match
     if (password !== confirmPassword) {
       return res
         .status(400)
         .json({ message: "Password and Confirm Password do not match" });
     }
-
+    const otp = Math.floor(100000 + Math.random() * 900000);
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -255,15 +256,83 @@ exports.createAdmin = async (req, res) => {
       phone,
       password: hashedPassword,
       role_id,
+      email_otp: otp, // Set OTP for email verification
+      email_verified: false, // Initially set to false
     });
 
     await newAdmin.save();
+    // Send OTP via nodemailer
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      secure: true,
+      port: 465,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      to: email,
+      subject: "Your OTP Code - Pegasus Admin Panel",
+      html: `
+    <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+      <div style="max-width: 600px; margin: auto; background-color: #ffffff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
+        <div style="background-color: #000; color: #fff; text-align: center; padding: 20px;">
+          <h1 style="margin: 0;">Pegasus</h1>
+          <p style="margin: 0; font-size: 14px;">Secure Admin Panel</p>
+        </div>
+        <div style="padding: 30px;">
+          <h2 style="color: #333;">Your OTP Code</h2>
+          <p style="color: #555; font-size: 15px;">
+            Please use the following One-Time Password (OTP) to verify your email address:
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="display: inline-block; background-color: #000; color: #fff; padding: 15px 25px; border-radius: 6px; font-size: 24px; font-weight: bold; letter-spacing: 2px;">
+              ${otp}
+            </div>
+          </div>
+          <p style="color: #777; font-size: 14px;">
+            This OTP is valid for a limited time. Do not share this code with anyone.
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+          <p style="font-size: 12px; color: #aaa; text-align: center;">
+            &copy; ${new Date().getFullYear()} Pegasus Admin Panel. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  `,
+    });
 
     res.status(201).json(newAdmin);
   } catch (error) {
     res.status(400).json({ message: "Error creating admin", error });
   }
 };
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await Admin.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.email_otp === Number(otp)) {
+      user.email_verified = true;
+      user.email_otp = null;
+      await user.save();
+      res
+        .status(200)
+        .json({ success: true, message: "OTP verified successfully" });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // Update admin by id
 exports.updateAdmin = async (req, res) => {
   try {
