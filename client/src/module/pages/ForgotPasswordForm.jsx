@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-
+import { toast } from "react-toastify"
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState("")
@@ -15,9 +15,11 @@ const ForgotPasswordForm = () => {
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/forgot-password`, { email },{
         withCredentials: true // Ensure cookies are sent with the request
       })
+      toast.success("Password reset link sent to your email!")
       console.log("Response from forgot password:", res)
       setStatus("Email sent! Check your inbox.")
     } catch (err) {
+      toast.error("Failed to send reset link. Please check your email.")
       console.error(err)
       setStatus("User not found or error sending email.")
     }

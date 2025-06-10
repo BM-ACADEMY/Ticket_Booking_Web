@@ -19,6 +19,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/module/context/AuthContext"
 
 const data = {
   user: {
@@ -33,55 +34,6 @@ const data = {
       plan: "Enterprise",
     }
   ],
-  // navMain: [
-  //   {
-  //     title: "Dashboard",
-  //     url: "#",
-  //     icon: SquareTerminal,
-  //     isActive: true,
-  //   },
-  //   {
-  //     title: "Ticket Booking",
-  //     url: "#",
-  //     icon: Ticket,
-  //   },
-  //   {
-  //     title: "QR Scanner",
-  //     url: "#",
-  //     icon: ScanQrCode ,
-  //   },
-  //   {
-  //     title: "Events",
-  //     url: "#",
-  //     icon: Calendar ,
-  //   },
-  //   {
-  //     title: "Attendance List",
-  //     url: "#",
-  //     icon: NotebookPen ,
-  //     items: [
-  //       {
-  //         title: "Customers Attendance",
-  //         url: "#",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     title: "New Members",
-  //     url: "#",
-  //     icon: Users ,
-  //     items: [
-  //       {
-  //         title: "Admin",
-  //         url: "#",
-  //       },
-  //       {
-  //         title: "Sub Admin",
-  //         url: "#",
-  //       },
-  //     ],
-  //   },
-  // ],
 
   navMain: [
   {
@@ -146,13 +98,34 @@ const data = {
 }
 
 export function AppSidebar({ ...props }) {
+  const { user } = useAuth() // Get user from AuthContext
+  console.log("AppSidebar user:", user);
+  
+  const role = user?.role?.name
+  // Filter navMain based on role
+  const getFilteredNavMain = () => {
+    if (role === "Admin") {
+      return data.navMain // Admin sees all links
+    } else if (role === "Checker") {
+      return data.navMain.filter((item) =>
+        ["QR Scanner", "Attendance List"].includes(item.title)
+      )
+    } else if (role === "subAdmin") {
+      return data.navMain.filter((item) =>
+        ["Dashboard", "Ticket Booking", "Events", "QR Scanner", "Attendance List"].includes(item.title)
+      )
+    }
+    return [] // Default: return empty array if role is undefined
+  }
+
+  const filteredNavMain = getFilteredNavMain()
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

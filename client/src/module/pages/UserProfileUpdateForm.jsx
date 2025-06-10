@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import axios from "axios"
+import { toast } from "react-toastify"
 
 const UserProfileUpdateForm = () => {
   const { user } = useAuth();
@@ -51,8 +52,10 @@ console.log("user in profile update form", user);
         },
         { withCredentials: true }
       )
+      toast.success(res.data.message || "Profile updated successfully!")
       console.log("Profile updated successfully:", res)
     } catch (error) {
+      toast.error(error?.data?.message || "Failed to update profile")
       console.error("Failed to update profile. Please try again later.", error)
     }
   }

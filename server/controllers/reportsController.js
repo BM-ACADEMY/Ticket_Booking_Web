@@ -1,4 +1,6 @@
 const Report = require('../models/reportsModel');
+const mongoose = require('mongoose');
+const Ticket = require('../models/ticketModel');
 
 // Create new report
 exports.createReport = async (req, res) => {
@@ -20,19 +22,56 @@ exports.createReport = async (req, res) => {
   }
 };
 
-// Get all reports
 exports.getAllReports = async (req, res) => {
   try {
-    const reports = await Report.find()
-      .populate('admin_id', 'name email')
-      .populate('show_ids', 'title datetime location');
-    res.json({
+    const { adminId } = req.query;
+
+    if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
+      return res.status(400).json({ success: false, message: "Invalid or missing adminId" });
+    }
+
+    const reports = await Report.find({ admin_id: adminId })
+      .populate("admin_id", "name email")
+      .populate("show_ids", "title datetime location");
+
+    const reportWithStats = await Promise.all(
+      reports.map(async (report) => {
+        const startOfDay = new Date(report.report_date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const tickets = await Ticket.find({
+          created_by: report.admin_id._id,
+          show_id: { $in: report.show_ids.map(show => show._id) },
+          created_at: { $gte: startOfDay, $lte: endOfDay },
+        });
+
+        const totalTickets = tickets.reduce((sum, t) => sum + t.ticket_count, 0);
+        const totalAmount = tickets.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+        return {
+          ...report.toObject(),
+          total_tickets_sold: totalTickets,
+          total_amount_earned: totalAmount,
+          total_shows_booked: report.show_ids.length,
+        };
+      })
+    );
+
+    res.status(200).json({
       success: true,
-      message: 'Reports retrieved successfully',
-      reports: reports,
+      message: "Reports retrieved successfully",
+      reports: reportWithStats,
     });
+
   } catch (error) {
-    res.status(500).json({success:false, message: 'Error fetching reports', error: error.message });
+    console.error("Error fetching reports:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching reports",
+      error: error.message,
+    });
   }
 };
 

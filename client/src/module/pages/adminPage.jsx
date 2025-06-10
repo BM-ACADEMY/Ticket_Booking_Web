@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, User, Lock, ShieldCheck } from "lucide-react";
+import { toast } from "react-toastify";
 
 const AdminPage = () => {
   const [form, setForm] = useState({
@@ -28,11 +29,12 @@ const AdminPage = () => {
             console.log("Admin Role:", adminRole);
         if (adminRole) {
       
-          
+          toast.success("Role fetched successfully");
           setForm((prev) => ({ ...prev, role: adminRole.name }));
           setRoleId(adminRole.role_id); // Assuming role_id is the ID of the role
         }
       } catch (err) {
+        toast.error("Failed to fetch role");
         console.error("Failed to fetch role", err);
       }
     };
@@ -90,9 +92,11 @@ const handleChange = (e) => {
         role_id: role_id, // Assuming role_id is the name of the role
       }
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/create-admin-and-subAdmin`, adminForm);
-      alert(res.data.message);
+      // alert(res.data.message);
+      toast.success(res.data.message || "Registration successful! Please check your email for OTP.");
       setOtpSent(true);
     } catch (err) {
+      toast.error(err.response?.data?.message || "Registration failed");
       alert(err.response?.data?.message || "Registration failed");
     }
   };
@@ -103,10 +107,11 @@ const handleChange = (e) => {
         email: form.email,
         otp,
       });
- 
+      toast.success(res.data.message || "OTP verified successfully! You can now log in.");
        setOtpSent(true);
     } catch (err) {
-      alert(err.response?.data?.message || "OTP verification failed");
+      toast.error(err.response?.data?.message || "OTP verification failed");
+      // alert(err.response?.data?.message || "OTP verification failed");
        setOtpSent(true);
     }
   };

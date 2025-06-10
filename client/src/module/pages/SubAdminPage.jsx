@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, User, Lock, ShieldCheck } from "lucide-react";
+import { toast } from "react-toastify";
 
 const subAdminPage = () => {
   const [form, setForm] = useState({
@@ -28,11 +29,12 @@ const subAdminPage = () => {
             console.log("subadmin Role:", adminRole);
         if (adminRole) {
       
-          
+          toast.success("Role fetched successfully");
           setForm((prev) => ({ ...prev, role: adminRole.name }));
           setRoleId(adminRole.role_id); // Assuming role_id is the ID of the role
         }
       } catch (err) {
+        toast.error("Failed to fetch role");
         console.error("Failed to fetch role", err);
       }
     };
