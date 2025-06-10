@@ -2,25 +2,47 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { toast } from "sonner";
 import axios from "axios";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IndianRupee, Wallet, User, Mail, Phone, StickyNote, CreditCard, ReceiptText } from "lucide-react";
 import { useAuth } from "@/module/context/AuthContext";
+import { se } from "date-fns/locale";
 import { toast } from "react-toastify";
 
-const TicketBookingForm = ({ shows }) => {
+const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
     const [userInfo, setUserInfo] = useState({
         name: "",
         phone: "",
         notes: "",
     });
-    const {user} =useAuth();
+    const { user } = useAuth();
+    console.log(editData, "update form");
+
+    const [isEditMode, setIsEditMode] = useState(!!editData);
     const [selectedShows, setSelectedShows] = useState([]);
     const [allShows, setAllShows] = useState([]);
     const [loadingShows, setLoadingShows] = useState(true);
+    useEffect(() => {
+        if (editData) {
+            setUserInfo({
+                name: editData?.name || "",
+                phone: editData?.phone || "",
+                notes: editData?.notes || "",
+            });
+
+            setSelectedShows(
+                editData.shows?.map((ticket) => ({
+                    _id: ticket.show_id,
+                    title: ticket.show_title,
+                    price: ticket.amount,
+                    ticket_count: ticket.ticket_count,
+                })) || []
+            );
+        }
+    }, [editData]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -52,7 +74,7 @@ const TicketBookingForm = ({ shows }) => {
         (acc, s) => acc + calculateAmount(s.price, s.ticket_count),
         0
     );
-
+   
     useEffect(() => {
         const fetchShows = async () => {
             try {
@@ -60,8 +82,8 @@ const TicketBookingForm = ({ shows }) => {
                 setAllShows(res.data.data); // adjust if the data is nested differently
                 toast.success("Shows fetched successfully!");
             } catch (err) {
-                toast.error("Failed to fetch shows.");
 
+                toast.error("Failed to fetch shows.");
                 console.error(err);
             } finally {
                 setLoadingShows(false);
@@ -82,46 +104,46 @@ const TicketBookingForm = ({ shows }) => {
 
 
     const handleSubmit = async (method) => {
-
-        console.log(method,'method');
-        
         if (!userInfo.name || !userInfo.phone || selectedShows.length === 0) {
             toast.error("Please fill all required fields and select at least one show.");
             return;
         }
 
         try {
-            // Step 1: Create user
-            const userResponse = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/users/create-user`,
+            let userId;
+            // Update existing user
+            const userResponse = await axios.put(
+                `${import.meta.env.VITE_BASE_URL}/users/update-user/${editData?._id}`,
                 userInfo
             );
+            userId = userResponse.data.data._id;
+            console.log();
+                toast.success("User information updated successfully!");
 
-            const userId = userResponse.data.data._id;
-
-            // Step 2: Prepare ticket data
-            const ticketPayload = selectedShows.map((s) => ({
-                user_id: userId,
-                show_id: s._id,
-                ticket_count: s.ticket_count,
-                created_by: user?._id || "default-admin-id", // Replace with actual admin ID if needed
-                amount: calculateAmount(s.price, s.ticket_count),
-                payment_method: method,
-            }));
-
-            // Step 3: Book tickets
-            const ticketResponse = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/tickets/create-ticket`,
-                ticketPayload
+            // Update each ticket individually
+            await Promise.all(
+                editData.shows.map((s) =>
+                    axios.put(`${import.meta.env.VITE_BASE_URL}/tickets/update-ticket/${s.ticket_id}`, {
+                        user_id: userId,
+                        show_id: s._id,
+                        ticket_count: s.ticket_count,
+                        created_by: user?._id || "default-admin-id",
+                        amount: calculateAmount(s.amount, s.ticket_count),
+                        payment_method: method,
+                    })
+                )
             );
 
-            toast.success("Tickets booked successfully!");
+            toast.success("Tickets updated successfully!");
+
+            onClose?.(); // Close the Sheet
         } catch (err) {
             const errorMessage =
                 err.response?.data?.message || err.message || "Something went wrong";
             toast.error(errorMessage);
         }
     };
+
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -143,7 +165,7 @@ const TicketBookingForm = ({ shows }) => {
                         required
                     />
                 </div>
-            
+
                 <div>
                     <Label htmlFor="phone" className="mb-3  flex items-center gap-2">
                         <Phone className="w-4 h-4" />
@@ -247,4 +269,4 @@ const TicketBookingForm = ({ shows }) => {
     );
 }
 
-export default TicketBookingForm;
+export default TicketBookingUpdateForm;

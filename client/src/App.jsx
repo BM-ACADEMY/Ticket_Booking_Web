@@ -8,6 +8,8 @@ import LoginRoute from "@/module/auth/LoginRoute"; // ✅ Import LoginRoute
 import ForgotPasswordForm from "./module/pages/ForgotPasswordForm";
 import ResetPasswordForm from "./module/pages/ResetPasswordForm";
 import Events from "./module/pages/Events";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 function App() {
@@ -43,6 +45,17 @@ function App() {
           </Route>
         </Routes>
       </Router>
+        <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </AuthProvider>
   );
 }

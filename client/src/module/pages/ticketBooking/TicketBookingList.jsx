@@ -22,6 +22,8 @@ import {
 
 // Lucide Icons
 import { Eye, Edit, Trash2 } from "lucide-react";
+import TicketSheetWrapper from "@/module/pages/ticketBooking/TicketSheetWrapper";
+import { toast } from "react-toastify";
 
 const FILTER_OPTIONS = [
     { value: "all", label: "All" },
@@ -37,15 +39,20 @@ const UserTicketTable = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [selected, setSelected] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+
 
     const fetchData = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`, {
                 params: { page, filter },
             });
+            toast.success("Data fetched successfully");
             setData(res.data.data);
             setTotalPages(res.data.pagination.totalPages);
         } catch (err) {
+            toast.error("Failed to fetch data");
             console.error("Error fetching data", err);
         }
     };
@@ -57,6 +64,12 @@ const UserTicketTable = () => {
         setSelected(item);
         setOpenDrawer(true);
     };
+
+    const handleEditClick = (item) => {
+        setSelectedItem(item);
+        setIsSheetOpen(true);
+    };
+
     return (
         <>
 
@@ -112,9 +125,15 @@ const UserTicketTable = () => {
                                     <TableCell>{firstShow?.ticket_count}</TableCell>
                                     <TableCell>₹{parseFloat(firstShow?.amount || 0).toFixed(2)}</TableCell>
                                     <TableCell className="flex gap-2">
-                                        <Button variant="secondary" className="cursor-pointer" size="icon" onClick={() => handleView(item)}>
+                                        <Button
+                                            key={item._id}
+                                            onClick={() => handleEditClick(item)}
+                                            variant="secondary"
+                                            size="icon"
+                                        >
                                             <Edit className="w-4 h-4" />
                                         </Button>
+
                                         <Button variant="secondary" size="icon" cursor onClick={() => handleView(item)}>
                                             <Eye className="w-4 h-4" />
                                         </Button>
@@ -126,6 +145,11 @@ const UserTicketTable = () => {
                 </TableBody>
 
             </Table>
+            <TicketSheetWrapper
+                open={isSheetOpen}
+                editData={selectedItem}
+                onClose={() => setIsSheetOpen(false)}
+            />
             {/* Drawer View */}
             <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
                 <DrawerContent>

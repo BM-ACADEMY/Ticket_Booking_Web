@@ -21,6 +21,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function EventListTable({ onEdit }) {
     const [shows, setShows] = useState([]);
@@ -43,14 +44,13 @@ export default function EventListTable({ onEdit }) {
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`, {
                     withCredentials: true, // Include cookies for authentication
                 });
+                toast.success("Shows fetched successfully");
                 setShows(response.data.data || []);
                 console.log("Fetched shows:", response.data.data);
                 
             } catch (error) {
-                toast.error("Failed to fetch shows", {
-                    description:
-                        error.response?.data?.message || "Something went wrong.",
-                });
+                toast.error("Failed to fetch shows", 
+                   );
                 console.error("Fetch shows error:", error);
             } finally {
                 setIsLoading(false);
@@ -71,10 +71,9 @@ export default function EventListTable({ onEdit }) {
 
             if (response.status === 200) {
                 setShows((prev) => prev.filter((show) => show._id !== showToDelete._id));
-                toast.success("Show deleted successfully", {
-                    description: `The show "${showToDelete.title}" has been deleted.`,
-                });
+                toast.success("Show deleted successfully");
             }
+
         } catch (error) {
             toast.error("Failed to delete show", {
                 description:

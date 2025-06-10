@@ -11,9 +11,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/axios": "^0.9.36",
     "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^6.4.17",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
@@ -26,6 +28,7 @@
     "mongoose-sequence": "^6.0.1",
     "multer": "^2.0.1",
     "nodemailer": "^7.0.3",
+    "qrcode": "^1.5.4",
     "uuid": "^11.1.0"
   }
 }

@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/sidebar";
 
 export function NavMain({ items }) {
+
+  console.log("NavMain items:", items);
+  
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Main</SidebarGroupLabel>

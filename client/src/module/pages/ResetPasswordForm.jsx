@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "react-toastify"
 
 const ResetPasswordForm = () => {
   const { token } = useParams()
@@ -22,9 +23,11 @@ const ResetPasswordForm = () => {
     try {
      const res= await axios.post(`${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/reset-password/${token}`, { password })
         console.log("Response from reset password:", res);
+        toast.success("Password updated successfully.")
       setStatus("Password updated successfully.")
       setTimeout(() => navigate("/login"), 2000)
     } catch (err) {
+      toast.error("Failed to reset password. Please try again.")
       console.error(err)
       setStatus("Invalid or expired token.")
     }
