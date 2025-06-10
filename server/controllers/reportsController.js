@@ -30,21 +30,27 @@ exports.getAllReports = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid or missing adminId" });
     }
 
-    const reports = await Report.find({ admin_id: adminId })
+    // 📅 Get start and end of today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // ⏳ Fetch today's reports only
+    const reports = await Report.find({
+      admin_id: adminId,
+      report_date: { $gte: startOfToday, $lte: endOfToday },
+    })
       .populate("admin_id", "name email")
       .populate("show_ids", "title datetime location");
 
     const reportWithStats = await Promise.all(
       reports.map(async (report) => {
-        const startOfDay = new Date(report.report_date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setHours(23, 59, 59, 999);
-
         const tickets = await Ticket.find({
           created_by: report.admin_id._id,
-          show_id: { $in: report.show_ids.map(show => show._id) },
-          created_at: { $gte: startOfDay, $lte: endOfDay },
+          show_id: { $in: report.show_ids.map((show) => show._id) },
+          created_at: { $gte: startOfToday, $lte: endOfToday },
         });
 
         const totalTickets = tickets.reduce((sum, t) => sum + t.ticket_count, 0);
@@ -61,7 +67,7 @@ exports.getAllReports = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Reports retrieved successfully",
+      message: "Today's reports retrieved successfully",
       reports: reportWithStats,
     });
 
@@ -74,7 +80,6 @@ exports.getAllReports = async (req, res) => {
     });
   }
 };
-
 // Get report by ID
 exports.getReportById = async (req, res) => {
   try {

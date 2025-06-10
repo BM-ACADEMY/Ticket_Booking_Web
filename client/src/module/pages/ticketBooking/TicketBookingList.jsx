@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -43,23 +43,25 @@ const UserTicketTable = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
 
+useEffect(() => {
     const fetchData = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`, {
                 params: { page, filter },
             });
-            toast.success("Data fetched successfully");
             setData(res.data.data);
             setTotalPages(res.data.pagination.totalPages);
+            // toast.success("Data fetched successfully");
         } catch (err) {
-            toast.error("Failed to fetch data");
+            // toast.error("Failed to fetch data");
             console.error("Error fetching data", err);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [page, filter]);
+    fetchData();
+}, [filter, page]); // 👈 triggers re-fetch when either filter or page changes
+
+
     const handleView = (item) => {
         setSelected(item);
         setOpenDrawer(true);

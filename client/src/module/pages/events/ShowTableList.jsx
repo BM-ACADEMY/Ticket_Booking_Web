@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState, useEffect, useRef } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import {
     Table,
@@ -33,12 +32,16 @@ export default function EventListTable({ onEdit }) {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentShows = shows.slice(indexOfFirstItem, indexOfLastItem);
+    const hasFetched = useRef(false);
 
     const totalPages = Math.ceil(shows.length / itemsPerPage);
 
 
     // Fetch all shows
     useEffect(() => {
+        if (hasFetched.current) return;
+        hasFetched.current = true;
+
         const fetchShows = async () => {
             try {
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`, {
@@ -47,10 +50,10 @@ export default function EventListTable({ onEdit }) {
                 toast.success("Shows fetched successfully");
                 setShows(response.data.data || []);
                 console.log("Fetched shows:", response.data.data);
-                
+
             } catch (error) {
-                toast.error("Failed to fetch shows", 
-                   );
+                toast.error("Failed to fetch shows",
+                );
                 console.error("Fetch shows error:", error);
             } finally {
                 setIsLoading(false);
