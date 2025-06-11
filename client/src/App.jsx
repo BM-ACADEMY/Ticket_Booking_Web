@@ -10,7 +10,7 @@ import ResetPasswordForm from "./module/pages/ResetPasswordForm";
 import Events from "./module/pages/Events";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import QRCodeUserView from "./module/pages/qrcode/QrcodeUserView";
+import QRCodeUserView from "./module/pages/qrcode/QRcodeUserView";
 import AttendanceMark from "./module/pages/qrcode/Attendancemark";
 
 function App() {
