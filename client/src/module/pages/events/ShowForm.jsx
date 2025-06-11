@@ -5,7 +5,7 @@ import { CalendarIcon, ImageIcon, MapPin, Tag, Text } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Calendar24 from "@/components/ui/Calendar24";
+import Calendar24 from "@/components/ui/calendar24";
 
 export default function ShowForm({ initialData = null }) {
 
