@@ -4,6 +4,7 @@ const ticketController = require('../controllers/ticketController');
 
 // Create ticket
 router.post('/create-ticket', ticketController.createTicket);
+router.get('/count/:user_id/:show_id', ticketController.getTicketCount);
 
 // Get all tickets
 router.get('/fetch-all-ticket', ticketController.getAllTickets);

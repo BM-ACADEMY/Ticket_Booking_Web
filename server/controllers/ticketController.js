@@ -6,6 +6,7 @@ const fs = require("fs");
 const Show = require("../models/showModel");
 const path = require("path");
 const Report = require("../models/reportsModel");
+const mongoose =require('mongoose')
 // Create new ticket
 // Create new ticket(s)
 // exports.createTicket = async (req, res) => {
@@ -54,7 +55,7 @@ exports.createTicket = async (req, res) => {
     }
 
     const qrFilePath = path.join(qrDirPath, qrFileName);
-    const qrLink = `${process.env.BASE_URL}/qrcodes/${qrFileName}`;
+  const viewLink = `${process.env.FRONTEND_URL}/show-qr/${qrFileName}`;
 
     // Save QR code image
     await QRCode.toFile(qrFilePath, qrData);
@@ -98,7 +99,7 @@ You have booked ${ticket.ticket_count} ticket(s) for ${
       } on ${new Date(show.datetime).toLocaleString("en-IN")} at ${
         show.location
       }.
-E-ticket: ${qrLink}
+E-ticket: ${viewLink}
 Entry allowed only if you show the e-ticket from this link.
 
 Payment of ₹${parseFloat(ticket.amount)} via ${
@@ -110,22 +111,22 @@ To enjoy exclusive access to the Pegasus Food Court throughout the week, please 
 
 Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)`;
 
-      // await axios.post(
-      //   "https://www.fast2sms.com/dev/bulkV2",
-      //   {
-      //     route: "q",
-      //     message,
-      //     language: "english",
-      //     flash: 0,
-      //     numbers: user.phone,
-      //   },
-      //   {
-      //     headers: {
-      //       authorization: process.env.FAST2SMS_API_KEY,
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
+      await axios.post(
+        "https://www.fast2sms.com/dev/bulkV2",
+        {
+          route: "q",
+          message,
+          language: "english",
+          flash: 0,
+          numbers: user.phone,
+        },
+        {
+          headers: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
     }
 
     return res.status(201).json({
@@ -138,6 +139,21 @@ Craving convenience? We also offer delivery to your doorstep! (Note: Available o
     res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+exports.getTicketCount = async (req, res) => {
+  try {
+    const { user_id, show_id } = req.params;
+    console.log(req.params,"params");
+    
+    const count = await Ticket.aggregate([
+      { $match: { user_id: new mongoose.Types.ObjectId(user_id), show_id: new mongoose.Types.ObjectId(show_id) } },
+      { $group: { _id: null, total: { $sum: "$ticket_count" } } }
+    ]);
+    res.json({ ticket_count: count[0]?.total || 0 });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch ticket count', message: error.message });
   }
 };
 

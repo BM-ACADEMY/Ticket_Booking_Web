@@ -58,9 +58,9 @@ const TicketBookingForm = ({ shows }) => {
             try {
                 const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`);
                 setAllShows(res.data.data); // adjust if the data is nested differently
-                toast.success("Shows fetched successfully!");
+                // toast.success("Shows fetched successfully!");
             } catch (err) {
-                toast.error("Failed to fetch shows.");
+                // toast.error("Failed to fetch shows.");
 
                 console.error(err);
             } finally {

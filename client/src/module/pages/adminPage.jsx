@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect ,useRef} from "react";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,13 @@ const AdminPage = () => {
   const [role_id,setRoleId] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const hasFetched = useRef(false);
+
 
   useEffect(() => {
+     if (hasFetched.current) return;
+    hasFetched.current = true;
+
     const fetchRole = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/roles/fetch-all-roles`);

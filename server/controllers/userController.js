@@ -36,6 +36,66 @@ exports.getUserById = async (req, res) => {
   }
 };
 
+// get all the tickets based on the qrcode
+exports.getUserTicketsByQRCode = async (req, res) => {
+  try {
+    const { qrcode } = req.params;
+
+    const user = await User.findOne({ qr_id: qrcode });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const data = await Ticket.aggregate([
+      { $match: { user_id: user._id } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "shows",
+          localField: "show_id",
+          foreignField: "_id",
+          as: "show",
+        },
+      },
+      { $unwind: "$show" },
+      {
+        $group: {
+          _id: "$user._id",
+          name: { $first: "$user.name" },
+          phone: { $first: "$user.phone" },
+          notes: { $first: "$user.notes" },
+          is_offline: { $first: "$user.is_offline" },
+          qr_id: { $first: "$user.qr_id" },
+          shows: {
+            $push: {
+              ticket_id: "$_id",
+              show_id: "$show._id",
+              show_title: "$show.title",
+              show_logo: "$show.logo",
+              location: "$show.location",
+              datetime: "$show.datetime",
+              ticket_count: "$ticket_count",
+              amount: { $toDouble: "$amount" },
+              payment_method: "$payment_method",
+            },
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({ success: true, data: data[0] || null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // Create new user
 exports.createUser = async (req, res) => {
   try {

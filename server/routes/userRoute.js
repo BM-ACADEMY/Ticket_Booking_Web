@@ -5,6 +5,9 @@ const userController = require("../controllers/userController");
 // Get all users
 router.get("/fetch-all-users", userController.getAllUsers);
 
+//get tickets by qrcode
+router.get("/by-qrcode/:qrcode", userController.getUserTicketsByQRCode);
+
 // Get user ticket show details with pagination and filter
 router.get("/fetch-all-users-with-filter", userController.getUserTicketShowDetails);
 
