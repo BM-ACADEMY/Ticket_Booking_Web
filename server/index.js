@@ -15,7 +15,8 @@ const showRoutes = require("./routes/showRoute");
 const ticketRoutes = require("./routes/ticketRoute");
 const attendanceRoutes = require("./routes/attendanceRoute");
 const reportRoutes = require("./routes/reportsRoute");
-
+const dashboardRoutes = require("./routes/dashboardRoute");
+const brandRoutes=require("./routes/brandRoute");
 
 // Load env variables
 dotenv.config();
@@ -50,6 +51,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
 app.use('/qrcodes', express.static(path.join(__dirname, 'public/qrcodes')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 // Routes
@@ -65,6 +68,8 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/shows", showRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/brands",brandRoutes);
 
 // Connect DB and then start server
 connectDB()

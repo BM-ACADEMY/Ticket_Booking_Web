@@ -8,9 +8,9 @@ router.get('/fetch-attendance-by-user-show/:user_id/:show_id', attendanceControl
 
 // ✅ Generic Routes After
 router.post('/', attendanceController.createAttendance);
-router.get('/', attendanceController.getAllAttendance);
+router.get('/fetch-all-attendance', attendanceController.getAllAttendance);
 router.get('/:id', attendanceController.getAttendanceById);
-router.put('/:id', attendanceController.updateAttendance);
-router.delete('/:id', attendanceController.deleteAttendance);
+router.put('/update-attendance/:id', attendanceController.updateAttendance);
+router.delete('/delete-attendance/:id', attendanceController.deleteAttendance);
 
 module.exports = router;
