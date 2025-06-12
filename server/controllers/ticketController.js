@@ -61,8 +61,8 @@ exports.createTicket = async (req, res) => {
     await QRCode.toFile(qrFilePath, qrData);
 
     const finalPayload = Array.isArray(payload)
-      ? payload.map((p) => ({ ...p, qr_code_link: qrLink }))
-      : { ...payload, qr_code_link: qrLink };
+      ? payload.map((p) => ({ ...p, qr_code_link: viewLink }))
+      : { ...payload, qr_code_link: viewLink };
 
     let tickets = [];
     if (Array.isArray(finalPayload)) {

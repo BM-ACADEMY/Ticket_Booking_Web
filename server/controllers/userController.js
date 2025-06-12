@@ -174,6 +174,7 @@ exports.getUserTicketShowDetails = async (req, res) => {
               location: "$show.location",
               datetime: "$show.datetime",
               ticket_count: "$ticket_count",
+              qr_code_link:"$qr_code_link",
               amount: { $toDouble: "$amount" },
               payment_method: "$payment_method",
             },
