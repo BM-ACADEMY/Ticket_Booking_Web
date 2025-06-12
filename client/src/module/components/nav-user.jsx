@@ -77,13 +77,14 @@ export function NavUser() {
 
   return (
     <>
-      <SidebarMenu>
+      <SidebarMenu  style={{backgroundColor:"royalblue"}}>
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                style={{}}
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
@@ -91,11 +92,11 @@ export function NavUser() {
                     {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                <div className="grid flex-1 text-left text-sm leading-tight  text-white hover:text-black transition-colors duration-200">
+                  <span className="truncate font-medium ">{user.name}</span>
+                  <span className="truncate text-xs ">{user.email}</span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
+                <ChevronsUpDown className="ml-auto size-4 text-white" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
 
@@ -113,7 +114,7 @@ export function NavUser() {
                       {getInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
+                  <div className="grid flex-1 text-left text-sm leading-tight text-black transition-colors duration-200">
                     <span className="truncate font-medium">{user.name}</span>
                     <span className="truncate text-xs">{user.email}</span>
                   </div>

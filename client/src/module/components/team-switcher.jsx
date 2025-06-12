@@ -24,19 +24,20 @@ export function TeamSwitcher({ teams }) {
   }
 
   return (
-    <SidebarMenu>
+    <SidebarMenu style={{ backgroundColor: "royalblue" }}>
       <SidebarMenuItem>
         <SidebarMenuButton
           size="lg"
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center rounded-lg overflow-hidden w-8 h-8 shrink-0">
+          <div className=" text-sidebar-primary-foreground flex items-center justify-center rounded-lg overflow-hidden w-8 h-8 shrink-0">
             {renderLogo(activeTeam.logo, "w-7 h-7", activeTeam.name)}
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">{activeTeam.name}</span>
-            <span className="truncate text-xs">{activeTeam.plan}</span>
+          <div className="grid flex-1 text-left text-sm leading-tight text-white hover:text-black transition-colors duration-200">
+            <span className="truncate font-medium"> {activeTeam.name} </span>
+            <span className="truncate text-xs"> {activeTeam.plan} </span>
           </div>
+
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>

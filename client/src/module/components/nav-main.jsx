@@ -25,7 +25,7 @@ export function NavMain({ items }) {
   console.log("NavMain items:", items);
   
   return (
-    <SidebarGroup>
+    <SidebarGroup  style={{backgroundColor:"royalblue"}}>
       <SidebarGroupLabel>Main</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>
@@ -39,10 +39,10 @@ export function NavMain({ items }) {
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <SidebarMenuButton tooltip={item.title} className="text-white hover:text-black">
+                    {item.icon && <item.icon className="" />}
+                    <span className="">{item.title}</span>
+                    <ChevronRight className="ml-auto  transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -51,22 +51,22 @@ export function NavMain({ items }) {
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton asChild>
                           <Link to={subItem.url}>
-                            <span>{subItem.title}</span>
+                            <span className="text-white hover:text-black">{subItem.title}</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
-                  </SidebarMenuSub>
+                  </SidebarMenuSub>   
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
           ) : (
             // Simple non-collapsible link
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
+              <SidebarMenuButton asChild tooltip={item.title} className="text-white hover:text-black">
                 <Link to={item.url} className="flex items-center gap-2 w-full">
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+                  {item.icon && <item.icon  />}
+                  <span >{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

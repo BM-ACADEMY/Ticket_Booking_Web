@@ -85,7 +85,7 @@ exports.updateAttendance = async (req, res) => {
 };
 
 exports.markAttendance = async (req, res) => {
-  const { user_id, show_id, member_count } = req.body;
+  const { user_id, show_id, member_count,notes } = req.body;
 
   const ticketSum = await Ticket.aggregate([
     { $match: { user_id: new mongoose.Types.ObjectId(user_id), show_id: new mongoose.Types.ObjectId(show_id) } },
@@ -102,6 +102,7 @@ exports.markAttendance = async (req, res) => {
       show_id,
       marked_by_admin_id: req.adminId, // replace with actual admin ID from auth
       member_count,
+      notes,
       qr_valid,
     },
     { new: true, upsert: true }

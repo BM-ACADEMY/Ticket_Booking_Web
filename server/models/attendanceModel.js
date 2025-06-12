@@ -3,17 +3,17 @@ const mongoose = require('mongoose');
 const attendanceSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users',
+    ref: 'User',
     required: true,
   },
   show_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Shows',
+    ref: 'Show',
     required: true,
   },
   marked_by_admin_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Admins',
+    ref: 'Admin',
     required: true,
   },
   marked_at: {
@@ -23,6 +23,9 @@ const attendanceSchema = new mongoose.Schema({
   member_count: {
     type: Number,
     required: true,
+  },
+  notes:{
+    type:String,
   },
   qr_valid: {
     type: Boolean,

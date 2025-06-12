@@ -11,7 +11,7 @@ import { IndianRupee, Wallet, User, Mail, Phone, StickyNote, CreditCard, Receipt
 import { useAuth } from "@/module/context/AuthContext";
 import { toast } from "react-toastify";
 
-const TicketBookingForm = ({ shows }) => {
+const OfflineTicketBookingForm = ({ shows }) => {
     const [userInfo, setUserInfo] = useState({
         name: "",
         phone: "",
@@ -248,4 +248,4 @@ const TicketBookingForm = ({ shows }) => {
     );
 }
 
-export default TicketBookingForm;
+export default OfflineTicketBookingForm;

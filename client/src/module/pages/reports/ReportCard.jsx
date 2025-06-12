@@ -5,6 +5,8 @@ import { format } from "date-fns"
 const ReportCard = ({ report }) => {
   return (
     <>
+      <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+                    style={{ backgroundColor: "royalblue" }}>Daily Reports</h2>
       <div className="flex flex-col gap-4">
         <div className="flex items-center w-full justify-between">
           {/* <h2 className="text-xl font-semibold text-gray-800">🎫 Ticket Report</h2> */}
@@ -43,4 +45,4 @@ const ReportCard = ({ report }) => {
   )
 }
 
-export default ReportCard
+export default ReportCard 

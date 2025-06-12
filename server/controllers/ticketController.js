@@ -55,7 +55,7 @@ exports.createTicket = async (req, res) => {
     }
 
     const qrFilePath = path.join(qrDirPath, qrFileName);
-  const viewLink = `${process.env.FRONTEND_URL}/show-qr/${qrFileName}`;
+  const viewLink = `${process.env.FRONTEND_QRCODE_URL}/qrcode/${qrData}`;
 
     // Save QR code image
     await QRCode.toFile(qrFilePath, qrData);

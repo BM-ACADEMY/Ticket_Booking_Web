@@ -22,7 +22,7 @@ import { toast } from "react-toastify"
 
 const UserProfileUpdateForm = () => {
   const { user } = useAuth();
-console.log("user in profile update form", user);
+  console.log("user in profile update form", user);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -63,7 +63,8 @@ console.log("user in profile update form", user);
   return (
     <Card className="max-w-4xl mx-auto mt-10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Update Profile</CardTitle>
+        <CardTitle className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+          style={{ backgroundColor: "royalblue" }}>Update Profile</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">

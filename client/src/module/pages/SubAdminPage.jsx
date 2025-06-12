@@ -178,25 +178,41 @@ const handleChange = (e) => {
   );
 
 return (
-  <div className="flex flex-col lg:flex-row min-h-screen">
-    {/* Left Side */}
-    <div className="w-full lg:w-1/2 bg-gray-900 mb-3 rounded-sm text-white flex flex-col items-center justify-center p-10">
-      <h1 className="text-3xl font-bold mb-4 text-center">Welcome to Pegasus Sub Admin</h1>
-      <p className="text-lg text-gray-300 text-center">
-        This page is for registering a new <span className="text-white font-semibold">Sub Admin</span> to securely access and manage the platform.
-      </p>
+  <div className="flex flex-col min-h-screen">
+    {/* Header */}
+    <h2
+      className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "royalblue" }}
+    >
+      Create Sub Admin
+    </h2>
+
+  <div className="flex flex-col lg:flex-row flex-1">
+      {/* Left Side */}
+    <div className="w-full lg:w-1/2 bg-gray-900 text-white flex items-center justify-center p-6 sm:p-10">
+      <div className="text-center max-w-md">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4">
+          Welcome to Pegasus Sub Admin
+        </h1>
+        <p className="text-md sm:text-lg text-gray-300">
+          This page is for registering a new{" "}
+          <span className="text-white font-semibold">Sub Admin</span> to securely access and manage the platform.
+        </p>
+      </div>
     </div>
 
     {/* Right Side */}
-    <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-auto p-4 shadow-lg">
+    <div className="w-full lg:w-1/2 bg-gray-50 flex items-center justify-center p-6 sm:p-10">
+      <Card className="w-full max-w-md mx-auto p-4 sm:p-6 shadow-lg">
         <CardContent className="space-y-4">
           {otpSent ? renderOtpForm() : renderRegistrationForm()}
         </CardContent>
       </Card>
     </div>
   </div>
+  </div>
 );
+
 
 };
 

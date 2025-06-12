@@ -1,4 +1,4 @@
-import React, { useState, useEffect ,useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,23 +17,23 @@ const AdminPage = () => {
     role: "Admin",
   });
   const [errors, setErrors] = useState({});
-  const [role_id,setRoleId] = useState("");
+  const [role_id, setRoleId] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const hasFetched = useRef(false);
 
 
   useEffect(() => {
-     if (hasFetched.current) return;
+    if (hasFetched.current) return;
     hasFetched.current = true;
 
     const fetchRole = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/roles/fetch-all-roles`);
-        const adminRole =  res.data?.roles?.find((r) => r.name === "Admin");
-            console.log("Admin Role:", adminRole);
+        const adminRole = res.data?.roles?.find((r) => r.name === "Admin");
+        console.log("Admin Role:", adminRole);
         if (adminRole) {
-      
+
           toast.success("Role fetched successfully");
           setForm((prev) => ({ ...prev, role: adminRole.name }));
           setRoleId(adminRole.role_id); // Assuming role_id is the ID of the role
@@ -46,28 +46,28 @@ const AdminPage = () => {
     fetchRole();
   }, []);
 
-const handleChange = (e) => {
-  const { name, value } = e.target;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-  setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
 
-  // Clear error for current field only
-  setErrors((prevErrors) => {
-    const newErrors = { ...prevErrors };
-    delete newErrors[name];
+    // Clear error for current field only
+    setErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+      delete newErrors[name];
 
-    // Optional: real-time revalidation for confirmPassword
-    if (name === "password" || name === "confirmPassword") {
-      if (form.confirmPassword && value !== (name === "password" ? form.confirmPassword : form.password)) {
-        newErrors.confirmPassword = "Passwords do not match";
-      } else {
-        delete newErrors.confirmPassword;
+      // Optional: real-time revalidation for confirmPassword
+      if (name === "password" || name === "confirmPassword") {
+        if (form.confirmPassword && value !== (name === "password" ? form.confirmPassword : form.password)) {
+          newErrors.confirmPassword = "Passwords do not match";
+        } else {
+          delete newErrors.confirmPassword;
+        }
       }
-    }
 
-    return newErrors;
-  });
-};
+      return newErrors;
+    });
+  };
 
   const handleRegister = async () => {
     try {
@@ -88,7 +88,7 @@ const handleChange = (e) => {
 
       setErrors(newErrors);
       if (Object.keys(newErrors).length > 0) return;
-      const adminForm={
+      const adminForm = {
         name: form.name,
         email: form.email,
         phone: form.phone,
@@ -113,11 +113,11 @@ const handleChange = (e) => {
         otp,
       });
       toast.success(res.data.message || "OTP verified successfully! You can now log in.");
-       setOtpSent(true);
+      setOtpSent(true);
     } catch (err) {
       toast.error(err.response?.data?.message || "OTP verification failed");
       // alert(err.response?.data?.message || "OTP verification failed");
-       setOtpSent(true);
+      setOtpSent(true);
     }
   };
 
@@ -181,26 +181,39 @@ const handleChange = (e) => {
     </>
   );
 
-return (
-  <div className="flex flex-col lg:flex-row min-h-screen">
-    {/* Left Side */}
-    <div className="w-full lg:w-1/2 bg-gray-900 mb-3 rounded-sm text-white flex flex-col items-center justify-center p-10">
-      <h1 className="text-3xl font-bold mb-4 text-center">Welcome to Pegasus Admin</h1>
-      <p className="text-lg text-gray-300 text-center">
-        This page is for registering a new <span className="text-white font-semibold">Admin</span> to securely access and manage the platform.
-      </p>
-    </div>
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <h2
+        className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "royalblue" }}
+      >
+        Create Admin
+      </h2>
 
-    {/* Right Side */}
-    <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-auto p-4 shadow-lg">
-        <CardContent className="space-y-4">
-          {otpSent ? renderOtpForm() : renderRegistrationForm()}
-        </CardContent>
-      </Card>
+      {/* Main Section - Stack on mobile */}
+      <div className="flex flex-col lg:flex-row flex-1">
+
+        {/* Left Section */}
+        <div className="w-full lg:w-1/2 bg-gray-900 text-white flex flex-col items-center justify-center p-6 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">Welcome to Pegasus Admin</h1>
+          <p className="text-md sm:text-lg text-gray-300 text-center">
+            This page is for registering a new <span className="text-white font-semibold">Admin</span> to securely access and manage the platform.
+          </p>
+        </div>
+
+        {/* Right Section */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 p-4 sm:p-8">
+          <Card className="w-full max-w-md mx-auto p-4 shadow-lg">
+            <CardContent className="space-y-4">
+              {otpSent ? renderOtpForm() : renderRegistrationForm()}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+
 
 };
 
