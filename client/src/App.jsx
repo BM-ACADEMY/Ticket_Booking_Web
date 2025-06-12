@@ -10,7 +10,8 @@ import ResetPasswordForm from "./module/pages/ResetPasswordForm";
 import Events from "./module/pages/Events";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import QRCodeUserView from "./module/pages/qrcode/QRcodeUserView";
+import AttendanceMark from "./module/pages/qrcode/Attendancemark";
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
           <Route path="/shows/new" element={<Events />} />
           <Route path="/shows/edit/:id" element={<Events />} />
+          <Route path="/qrcode/:qrcode" element={<QRCodeUserView />} />
+          <Route path="/attendance-mark/:user_id/:show_id" element={<AttendanceMark />} />
 
           {/* Private Routes */}
           <Route element={<PrivateRoute />}>
@@ -45,7 +48,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-        <ToastContainer
+      <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar

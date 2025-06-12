@@ -1,5 +1,6 @@
 const Attendance = require('../models/attendanceModel');
-
+const Ticket=require('../models/ticketModel')
+const mongoose=require('mongoose');
 // Create attendance record
 exports.createAttendance = async (req, res) => {
   try {
@@ -14,6 +15,16 @@ exports.createAttendance = async (req, res) => {
     res.status(400).json({success:false, message: error.message });
   }
 };
+
+exports.getAttendance = async (req, res) => {
+  try {
+    const att = await Attendance.findOne({ user_id: req.params.user_id, show_id: req.params.show_id });
+    res.json({ attendance: att });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch attendance', message: error.message });
+  }
+};
+
 
 // Get all attendance records
 exports.getAllAttendance = async (req, res) => {
@@ -72,6 +83,34 @@ exports.updateAttendance = async (req, res) => {
     res.status(400).json({success:false, message: error.message });
   }
 };
+
+exports.markAttendance = async (req, res) => {
+  const { user_id, show_id, member_count,notes } = req.body;
+
+  const ticketSum = await Ticket.aggregate([
+    { $match: { user_id: new mongoose.Types.ObjectId(user_id), show_id: new mongoose.Types.ObjectId(show_id) } },
+    { $group: { _id: null, total: { $sum: "$ticket_count" } } }
+  ]);
+  const ticket_count = ticketSum[0]?.total || 0;
+
+  const qr_valid = ticket_count !== Number(member_count) ? true : false;
+
+  const att = await Attendance.findOneAndUpdate(
+    { user_id, show_id },
+    {
+      user_id,
+      show_id,
+      marked_by_admin_id: req.adminId, // replace with actual admin ID from auth
+      member_count,
+      notes,
+      qr_valid,
+    },
+    { new: true, upsert: true }
+  );
+
+  res.json({ attendance: att });
+};
+
 
 // Delete attendance by ID
 exports.deleteAttendance = async (req, res) => {

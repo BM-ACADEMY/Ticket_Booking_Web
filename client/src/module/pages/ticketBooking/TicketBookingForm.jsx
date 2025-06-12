@@ -58,9 +58,9 @@ const TicketBookingForm = ({ shows }) => {
             try {
                 const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`);
                 setAllShows(res.data.data); // adjust if the data is nested differently
-                toast.success("Shows fetched successfully!");
+                // toast.success("Shows fetched successfully!");
             } catch (err) {
-                toast.error("Failed to fetch shows.");
+                // toast.error("Failed to fetch shows.");
 
                 console.error(err);
             } finally {
@@ -125,7 +125,8 @@ const TicketBookingForm = ({ shows }) => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            <h2 className="text-2xl font-bold bg-[#fafafa] p-2 rounded-sm">🎟️ Book Tickets</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "royalblue" }}>🎟️ Book Tickets</h2>
 
             {/* User Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

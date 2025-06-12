@@ -3,7 +3,7 @@
 import {
   SquareTerminal,
   ScanQrCode ,Ticket ,Calendar,
-  NotebookPen,Users,
+  NotebookPen,Users,Tag
 } from "lucide-react"
 
 import Logo1 from "@/assets/images/logo1.jpg";
@@ -68,6 +68,11 @@ const data = {
     icon: Calendar,
   },
   {
+    title: "Brands",
+    url: "/brand",
+    icon: Tag,
+  },
+  {
     title: "Attendance List",
     url: "#",
     icon: NotebookPen,
@@ -98,7 +103,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }) {
-  const { user } = useAuth() // Get user from AuthContext
+  const { user } = useAuth();
   console.log("AppSidebar user:", user);
   
   const role = user?.role?.name
@@ -120,14 +125,14 @@ export function AppSidebar({ ...props }) {
 
   const filteredNavMain = getFilteredNavMain()
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" {...props}  style={{backgroundColor:"royalblue"}}>
+      <SidebarHeader  style={{backgroundColor:"royalblue"}}>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent  style={{backgroundColor:"royalblue"}}>
         <NavMain items={filteredNavMain} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter  style={{backgroundColor:"royalblue"}}>
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />

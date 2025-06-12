@@ -24,7 +24,11 @@ import {
 import { Search } from "lucide-react"
 
 import { useAuth } from "@/module/context/AuthContext"
+<<<<<<< HEAD
 import logo2 from "@/assets/images/logo4.png"
+=======
+import logo2 from "@/assets/images/logo2.PNG"
+>>>>>>> 8ae4cae4780f62573da650549ce1c120515c89e4
 
 const breadcrumbNameMap = {
   dashboard: "Dashboard",
@@ -157,7 +161,7 @@ const Page = ({ children }) => {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-4">{children || <Outlet />}</main>
+        <main className="flex-1 p-4 bg-gray-100">{children || <Outlet />}</main>
       </SidebarInset>
     </SidebarProvider>
   )

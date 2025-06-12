@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -43,23 +43,25 @@ const UserTicketTable = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
 
-    const fetchData = async () => {
-        try {
-            const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`, {
-                params: { page, filter },
-            });
-            toast.success("Data fetched successfully");
-            setData(res.data.data);
-            setTotalPages(res.data.pagination.totalPages);
-        } catch (err) {
-            toast.error("Failed to fetch data");
-            console.error("Error fetching data", err);
-        }
-    };
-
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`, {
+                    params: { page, filter },
+                });
+                setData(res.data.data);
+                setTotalPages(res.data.pagination.totalPages);
+                // toast.success("Data fetched successfully");
+            } catch (err) {
+                // toast.error("Failed to fetch data");
+                console.error("Error fetching data", err);
+            }
+        };
+
         fetchData();
-    }, [page, filter]);
+    }, [filter, page]); // 👈 triggers re-fetch when either filter or page changes
+
+
     const handleView = (item) => {
         setSelected(item);
         setOpenDrawer(true);
@@ -72,9 +74,10 @@ const UserTicketTable = () => {
 
     return (
         <>
-
+  <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+                    style={{ backgroundColor: "royalblue" }}>User Ticket Details</h2>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">User Ticket Details</h2>
+              
                 <Select value={filter} onValueChange={setFilter}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select filter" />

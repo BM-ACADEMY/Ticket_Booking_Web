@@ -1,10 +1,10 @@
 import React from 'react'
-import TicketBookingForm from './ticketBooking/TicketBookingForm'
+import TicketBookingTabs from './ticketBooking/TicketBookingTabs'
 
 const TicketBooking = () => {
   return (
     <div>
-     <TicketBookingForm />
+      <TicketBookingTabs />
     </div>
   )
 }
