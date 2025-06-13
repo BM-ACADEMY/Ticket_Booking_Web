@@ -335,7 +335,7 @@ const UserViewPage = () => {
                     transition={{ duration: 0.6, delay: index * 0.2 + 0.6 }}
                   >
                     <QRCode
-                      value={`${userData._id}:${show.show_id}`}
+                      value={`${import.meta.env.VITE_FRONTEND_URL}/attendance-mark/${userData._id}/${show.show_id}`}
                       size={100}
                       style={{
                         height: "auto",
