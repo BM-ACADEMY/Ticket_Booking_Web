@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, User, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "react-toastify";
-import AdminList from "./AdminList";
+import CheckerList from "./CheckerList";
 import {
   Dialog,
   DialogContent,
@@ -16,14 +16,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const AdminPage = () => {
+const CheckerPage = () => {
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
     password: "",
     confirmPassword: "",
-    role: "Admin",
+    role: "Checker",
     role_id: "",
   });
   const [errors, setErrors] = useState({});
@@ -45,7 +45,7 @@ const AdminPage = () => {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/roles/fetch-all-roles`, {
           withCredentials: true,
         });
-        const adminRole = res.data?.roles?.find((r) => r.name === "Admin");
+        const adminRole = res.data?.roles?.find((r) => r.name === "Checker");
         if (adminRole) {
           toast.success("Role fetched successfully");
           setForm((prev) => ({ ...prev, role: adminRole.name, role_id: adminRole.role_id }));
@@ -119,7 +119,7 @@ const AdminPage = () => {
           adminForm,
           { withCredentials: true }
         );
-        toast.success("Admin updated successfully");
+        toast.success("Checker updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/create-admin-and-subAdmin`,
@@ -127,7 +127,7 @@ const AdminPage = () => {
           { withCredentials: true }
         );
         setOtpSent(true);
-        toast.success("Admin created successfully. OTP sent.");
+        toast.success("Checker created successfully. OTP sent.");
       }
 
       setForm({
@@ -136,12 +136,12 @@ const AdminPage = () => {
         phone: "",
         password: "",
         confirmPassword: "",
-        role: "Admin",
+        role: "Checker",
         role_id: role_id,
       });
       setEditingAdmin(null);
-      setOtpSent(false);
-      setRefresh(!refresh);
+    //   setOtpSent(true);
+      setRefresh(!refresh); // Trigger CheckerList re-render
     } catch (err) {
       toast.error(err.response?.data?.message || "Operation failed");
     }
@@ -156,7 +156,7 @@ const AdminPage = () => {
       );
       toast.success("OTP verified successfully");
       setOtpSent(false);
-      setRefresh(!refresh);
+      setRefresh(!refresh); // Trigger CheckerList re-render
     } catch (err) {
       toast.error(err.response?.data?.message || "OTP verification failed");
       setOtpSent(false);
@@ -170,7 +170,7 @@ const AdminPage = () => {
       phone: admin.phone,
       password: "",
       confirmPassword: "",
-      role: "Admin",
+      role: "Checker",
       role_id: admin.role_id,
     });
     setEditingAdmin(admin);
@@ -182,12 +182,12 @@ const AdminPage = () => {
         `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/delete-admin-and-subAdmin/${adminToDelete}`,
         { withCredentials: true }
       );
-      toast.success("Admin deleted successfully");
-      setRefresh(!refresh);
+      toast.success("Checker deleted successfully");
+      setRefresh(!refresh); // Trigger CheckerList re-render
       setShowDeleteDialog(false);
       setAdminToDelete(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete admin");
+      toast.error(err.response?.data?.message || "Failed to delete checker");
       setShowDeleteDialog(false);
       setAdminToDelete(null);
     }
@@ -255,7 +255,7 @@ const AdminPage = () => {
       </div>
 
       <Button className="w-full mt-4" onClick={handleRegister}>
-        {editingAdmin ? "Update Admin" : "Register"}
+        {editingAdmin ? "Update Checker" : "Register"}
       </Button>
     </>
   );
@@ -276,18 +276,18 @@ const AdminPage = () => {
         className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
         style={{ backgroundColor: "#030049" }}
       >
-        Create Admin
+        Create Checker
       </h2>
 
       <div className="flex flex-col lg:flex-row flex-1">
         <div className="w-full lg:w-1/2 bg-[#030049] text-white flex items-center justify-center p-6 sm:p-10">
           <div className="text-center max-w-md">
             <h1 className="text-2xl sm:text-3xl font-bold mb-4">
-              Welcome to Pegasus Admin
+              Welcome to Pegasus Checker
             </h1>
             <p className="text-md sm:text-lg text-gray-300">
               This page is for registering a new{" "}
-              <span className="text-white font-semibold">Admin</span> to securely access and manage the platform.
+              <span className="text-white font-semibold">Checker</span> to securely access and manage the platform.
             </p>
           </div>
         </div>
@@ -302,7 +302,7 @@ const AdminPage = () => {
       </div>
 
       <div className="mt-5">
-        <AdminList
+        <CheckerList
           onEdit={handleEdit}
           onDelete={(adminId) => {
             setAdminToDelete(adminId);
@@ -317,7 +317,7 @@ const AdminPage = () => {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this admin? This action cannot be undone.
+              Are you sure you want to delete this checker? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -334,4 +334,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default CheckerPage;

@@ -17,6 +17,8 @@ const attendanceRoutes = require("./routes/attendanceRoute");
 const reportRoutes = require("./routes/reportsRoute");
 const dashboardRoutes = require("./routes/dashboardRoute");
 const brandRoutes=require("./routes/brandRoute");
+const associateBrand=require("./routes/associatesRoute")
+const eventBrand=require("./routes/eventBrandRoute");
 
 // Load env variables
 dotenv.config();
@@ -70,6 +72,10 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/brands",brandRoutes);
+app.use("/api/associate-brand",associateBrand);
+app.use("/api/event-brand",eventBrand);
+
+
 
 // Connect DB and then start server
 connectDB()

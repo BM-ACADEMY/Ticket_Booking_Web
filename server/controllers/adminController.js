@@ -94,7 +94,7 @@ exports.adminLogout = async (req, res) => {
 exports.getAllAdmins = async (req, res) => {
   try {
     // Step 1: Get the role_id for 'Admin'
-    const adminRole = await Role.findOne({ name: "Admin" });
+    const adminRole = await Role.findOne({ name: "Admin" }).sort({ createdAt: -1 });
 
     if (!adminRole) {
       return res.status(404).json({ message: "Admin role not found" });
@@ -173,7 +173,6 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  console.log(req.body, "reset password body");
 
   try {
     // Verify token
@@ -181,8 +180,9 @@ exports.resetPassword = async (req, res) => {
 
     // Find admin with matching token
     const user = await Admin.findOne({ token });
-    if (!user)
+    if (!user) {
       return res.status(400).json({ message: "Invalid or expired token" });
+    }
 
     // Check if embedded randomCode matches
     const decodedCode = decoded.code;
@@ -191,8 +191,9 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Token mismatch" });
     }
 
-    // Set password (will be hashed by pre-save hook)
-    user.password = password; // Let pre-save middleware hash it
+    // Hash new password manually and save
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
     user.token = null; // Clear token after use
     await user.save();
 
@@ -202,12 +203,11 @@ exports.resetPassword = async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired token" });
   }
 };
-
 // Get all SubAdmins
 exports.getAllSubAdmins = async (req, res) => {
   try {
     // Step 1: Get the role_id for 'subAdmin'
-    const subAdminRole = await Role.findOne({ name: "subAdmin" });
+    const subAdminRole = await Role.findOne({ name: "subAdmin" }).sort({ createdAt: -1 });
 
     if (!subAdminRole) {
       return res.status(404).json({ message: "subAdmin role not found" });
@@ -224,6 +224,26 @@ exports.getAllSubAdmins = async (req, res) => {
   }
 };
 
+exports.getAllCheckers = async (req, res) => {
+  try {
+    // Step 1: Get the role_id for 'Checker'
+    const checkerRole = await Role.findOne({ name: "Checker" }).sort({ createdAt: -1 });
+
+    if (!checkerRole) {
+      return res.status(404).json({ message: "Checker role not found" });
+    }
+
+    // Step 2: Get all admins with role_id matching Checker
+    const checkers = await Admin.find({
+      role_id: checkerRole.role_id,
+    }).select("-password");
+
+    res.status(200).json({checkers:checkers});
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 // Get single admin by id
 exports.getAdminById = async (req, res) => {
   try {
@@ -234,6 +254,7 @@ exports.getAdminById = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 // Create new admin
 exports.createAdmin = async (req, res) => {
   try {

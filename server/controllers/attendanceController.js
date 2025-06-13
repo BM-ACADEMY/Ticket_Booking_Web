@@ -18,7 +18,7 @@ exports.createAttendance = async (req, res) => {
 
 exports.getAttendance = async (req, res) => {
   try {
-    const att = await Attendance.findOne({ user_id: req.params.user_id, show_id: req.params.show_id });
+    const att = await Attendance.findOne({ user_id: req.params.user_id, show_id: req.params.show_id }).sort({ createdAt: -1 });
     res.json({ attendance: att });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch attendance', message: error.message });
@@ -29,7 +29,7 @@ exports.getAttendance = async (req, res) => {
 // Get all attendance records
 exports.getAllAttendance = async (req, res) => {
   try {
-    const attendanceList = await Attendance.find()
+    const attendanceList = await Attendance.find().sort({ createdAt: -1 })
       .populate('user_id', 'name email')
       .populate('show_id', 'title datetime')
       .populate('marked_by_admin_id', 'name email');
@@ -39,7 +39,7 @@ exports.getAllAttendance = async (req, res) => {
       attendance: attendanceList,
     });
   } catch (error) {
-    res.status(500).json({success:false, message: error.message });
+    res.status(500).json({success: false, message: error.message });
   }
 };
 

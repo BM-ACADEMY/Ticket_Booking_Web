@@ -30,14 +30,15 @@ exports.getAllReports = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid or missing adminId" });
     }
 
-    // 📅 Get start and end of today
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    // ✅ Get UTC start and end of today
+    const now = new Date();
+    const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    const endOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
 
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
+    console.log("Start of Today (UTC):", startOfToday.toISOString());
+    console.log("End of Today (UTC):", endOfToday.toISOString());
 
-    // ⏳ Fetch today's reports only
+    // ⏳ Fetch reports for this admin created today
     const reports = await Report.find({
       admin_id: adminId,
       report_date: { $gte: startOfToday, $lte: endOfToday },
@@ -45,11 +46,15 @@ exports.getAllReports = async (req, res) => {
       .populate("admin_id", "name email")
       .populate("show_ids", "title datetime location");
 
+    console.log(`Fetched ${reports.length} reports for admin ${adminId}`);
+
     const reportWithStats = await Promise.all(
       reports.map(async (report) => {
+        const showIds = report.show_ids.map((show) => show._id);
+
         const tickets = await Ticket.find({
           created_by: report.admin_id._id,
-          show_id: { $in: report.show_ids.map((show) => show._id) },
+          show_id: { $in: showIds },
           created_at: { $gte: startOfToday, $lte: endOfToday },
         });
 

@@ -77,7 +77,7 @@ export function NavUser() {
 
   return (
     <>
-      <SidebarMenu  style={{backgroundColor:"royalblue"}}>
+      <SidebarMenu  style={{backgroundColor:"#030049"}}>
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
