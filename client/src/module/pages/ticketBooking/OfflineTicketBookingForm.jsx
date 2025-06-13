@@ -126,7 +126,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}>🎟️ Book Tickets</h2>
+        style={{ backgroundColor: "#030049" }}>🎟️ Book Tickets</h2>
 
             {/* User Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -64,7 +64,7 @@ const UserProfileUpdateForm = () => {
     <Card className="max-w-4xl mx-auto mt-10 shadow-xl">
       <CardHeader>
         <CardTitle className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-          style={{ backgroundColor: "royalblue" }}>Update Profile</CardTitle>
+          style={{ backgroundColor: "#030049" }}>Update Profile</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">

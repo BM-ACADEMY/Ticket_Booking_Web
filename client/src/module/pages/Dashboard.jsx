@@ -47,7 +47,7 @@ const Dashboard = () => {
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}>Dashboard</h1>
+        style={{ backgroundColor: "#030049" }}>Dashboard</h1>
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

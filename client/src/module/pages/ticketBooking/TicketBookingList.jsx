@@ -63,34 +63,46 @@ const UserTicketTable = () => {
     // 👈 triggers re-fetch when either filter or page changes
 
 
-    const handleWhatsAppShare = (item, show) => {
-        const foodCourtLink = "https://pegasuscmc.com"; // replace with real one
+   const handleWhatsAppShare = (item, show) => {
+  const foodCourtLink = "https://pegasuscmc.com"; // Replace with actual link
+  const ticketLink = show.qr_code_link || "https://pegasustickets.com"; // Replace fallback if needed
 
-        const formattedDate = new Date(show.datetime).toLocaleString("en-IN", {
-            dateStyle: "full",
-            timeStyle: "short",
-        });
+  const formattedShowDate = new Date(show.datetime).toLocaleString("en-IN", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
 
-        const message = `
-Hi ${item.name}, welcome to Pegasus 2k25! – the crown jewel of CMC!
+  const formattedPaymentDate = new Date(show.payment_time || show.datetime).toLocaleString("en-IN", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
 
-You have booked ${show.ticket_count} ticket(s) for ${show.show_title} on ${formattedDate} at ${show.location}.
-E-ticket: ${show.qr_code_link}
-Entry allowed only if you show the e-ticket from this link.
+  const message = `
+Hi ${item.name},
+🌟 Welcome to Pegasus 2k25 – the crown jewel of CMC!
 
-Payment of ₹${show.amount} via ${show.payment_method} received on ${formattedDate}.
+You have successfully booked ${show.ticket_count} ticket(s) for ${show.show_title}, scheduled on ${formattedShowDate} at ${show.location}.
 
-To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
+🎟️ Please use the link below to access your e-ticket and show it at entry:
+${ticketLink}
+🔐 Entry is only allowed upon showing the e-ticket from the link.
+
+✅ Your payment of ₹${show.amount} through ${show.payment_method} has been successfully received on ${formattedPaymentDate}.
+
+📍 Event Venue: ${show.location}
+
+🍴To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
 ${foodCourtLink}
 
-Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)
+🍽️ Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)
 `;
 
-        const encodedMessage = encodeURIComponent(message.trim());
-        const whatsappURL = `https://wa.me/91${item.phone}?text=${encodedMessage}`;
+  const encodedMessage = encodeURIComponent(message.trim());
+  const whatsappURL = `https://wa.me/91${item.phone}?text=${encodedMessage}`;
 
-        window.open(whatsappURL, "_blank");
-    };
+  window.open(whatsappURL, "_blank");
+};
+
 
     const handleView = (item) => {
         setSelected(item);
@@ -105,7 +117,7 @@ Craving convenience? We also offer delivery to your doorstep! (Note: Available o
     return (
         <>
             <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-                style={{ backgroundColor: "royalblue" }}>User Ticket Details</h2>
+                style={{ backgroundColor: "#030049" }}>User Ticket Details</h2>
             <div className="flex justify-between items-center mb-4">
 
                 <Select value={filter} onValueChange={setFilter}>
@@ -157,7 +169,7 @@ Craving convenience? We also offer delivery to your doorstep! (Note: Available o
                                         {firstShow?.show_title}
                                     </TableCell>
                                     <TableCell>{firstShow?.ticket_count}</TableCell>
-                                    <TableCell>{firstShow?.qr_code_link}</TableCell>
+                                  <TableCell>{firstShow?.qr_code_link?.length > 10 ? `${firstShow.qr_code_link.slice(0, 10)}...` : firstShow?.qr_code_link}</TableCell>
                                     <TableCell>₹{parseFloat(firstShow?.amount || 0).toFixed(2)}</TableCell>
                                     <TableCell className="flex gap-2">
                                         <Button

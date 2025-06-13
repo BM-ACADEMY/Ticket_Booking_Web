@@ -162,7 +162,7 @@ exports.getTicketCount = async (req, res) => {
 // Get all tickets
 exports.getAllTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find()
+    const tickets = await Ticket.find().sort({ createdAt: -1 })
       .populate("user_id", "name email phone")
       .populate("show_id", "title location datetime")
       .populate("created_by", "name email");

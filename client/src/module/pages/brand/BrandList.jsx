@@ -57,7 +57,7 @@ const BrandList = () => {
         <div className="p-4 space-y-4">
                     <h2
       className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}
+        style={{ backgroundColor: "#030049" }}
     >
       Brand List
     </h2>
