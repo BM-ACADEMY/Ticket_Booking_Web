@@ -7,6 +7,8 @@ const Show = require("../models/showModel");
 const path = require("path");
 const Report = require("../models/reportsModel");
 const mongoose =require('mongoose')
+const dotenv=require('dotenv')
+dotenv.config();
 // Create new ticket
 // Create new ticket(s)
 // exports.createTicket = async (req, res) => {
@@ -55,7 +57,7 @@ exports.createTicket = async (req, res) => {
     }
 
     const qrFilePath = path.join(qrDirPath, qrFileName);
-  const viewLink = `${process.env.FRONTEND_QRCODE_URL}/qrcode/${qrData}`;
+  const viewLink = `${process.env.FRONTEND_QRCODE_URL}/${qrData}`;
 
     // Save QR code image
     await QRCode.toFile(qrFilePath, qrData);
@@ -111,22 +113,22 @@ To enjoy exclusive access to the Pegasus Food Court throughout the week, please 
 
 Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)`;
 
-      await axios.post(
-        "https://www.fast2sms.com/dev/bulkV2",
-        {
-          route: "q",
-          message,
-          language: "english",
-          flash: 0,
-          numbers: user.phone,
-        },
-        {
-          headers: {
-            authorization: process.env.FAST2SMS_API_KEY,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // await axios.post(
+      //   "https://www.fast2sms.com/dev/bulkV2",
+      //   {
+      //     route: "q",
+      //     message,
+      //     language: "english",
+      //     flash: 0,
+      //     numbers: user.phone,
+      //   },
+      //   {
+      //     headers: {
+      //       authorization: process.env.FAST2SMS_API_KEY,
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
     }
 
     return res.status(201).json({

@@ -6,32 +6,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/module/context/UserInfoContext";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import { useAuth } from "@/module/context/AuthContext";
 
 const AttendanceMark = () => {
   const { user_id, show_id } = useParams();
   const { userInfo } = useUser();
   const { user } = useAuth();
+
   const [ticketCount, setTicketCount] = useState(0);
   const [memberCount, setMemberCount] = useState("");
   const [notes, setNotes] = useState("");
-
   const [attendance, setAttendance] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(null); // null = loading state
 
-  console.log(userInfo, 'userinfo');
-
-
+  // Check role and fetch attendance info
   useEffect(() => {
+    if (!user) return; // Wait for user to load
+
+    const validRoles = ["admin", "subadmin", "checker"];
+    const userRole = user?.role?.name?.toLowerCase();
+
+    console.log("User Role:", userRole);
+
+    if (!userRole || !validRoles.includes(userRole)) {
+      setIsAuthorized(false);
+      toast.error("Access denied: You are not authorized to mark attendance.");
+      return;
+    }
+
+    setIsAuthorized(true); // ✅ Authorized
+
     const fetchData = async () => {
       try {
-        // 1️⃣ Ticket Count
         const ticketRes = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/tickets/count/${user_id}/${show_id}`
         );
         setTicketCount(ticketRes.data.ticket_count);
 
-        // 2️⃣ Existing Attendance (if any)
         const attRes = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/attendance/fetch-attendance-by-user-show/${user_id}/${show_id}`
         );
@@ -47,7 +59,7 @@ const AttendanceMark = () => {
     };
 
     fetchData();
-  }, [user_id, show_id]);
+  }, [user, user_id, show_id]);
 
   const handleMark = async () => {
     try {
@@ -69,6 +81,26 @@ const AttendanceMark = () => {
     }
   };
 
+  // 🔄 Loading state
+  if (isAuthorized === null) {
+    return (
+      <div className="max-w-md mx-auto p-6">
+        <Card className="p-4 text-center text-blue-600">Checking access...</Card>
+      </div>
+    );
+  }
+
+  // ❌ Unauthorized
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-md mx-auto p-6">
+        <Card className="p-4 text-red-600 font-medium text-center">
+          ❌ You do not have permission to access this page.
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto p-6 space-y-6">
       {userInfo && (
@@ -76,7 +108,7 @@ const AttendanceMark = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          viewport={{ once: true, amount: 1 }}
+          viewport={{ once: true }}
         >
           <Card className="mb-4 p-4 space-y-2">
             <h2 className="text-lg font-semibold">User Details</h2>
@@ -92,7 +124,7 @@ const AttendanceMark = () => {
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true }}
       >
         <Card className="p-4 space-y-4">
           <h2 className="text-lg font-bold">Mark Attendance</h2>
@@ -124,7 +156,7 @@ const AttendanceMark = () => {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ delay: 2 }}
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: true }}
             >
               <span>
                 Attendance recorded for {attendance.member_count} members. QR Valid:{" "}
