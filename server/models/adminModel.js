@@ -1,0 +1,50 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const adminSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    token: {
+      type: String,
+      default: null, // Used for password reset or email verification
+    },
+    role_id: {
+      type: String,
+      required: true,
+      ref: "Role", // references Roles.role_id
+    },
+    email_otp: { type: Number },
+    email_verified: { type: Boolean, default: false },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: false },
+  }
+);
+
+// Encrypt password before saving
+adminSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+const Admin = mongoose.model("Admin", adminSchema);
+module.exports = Admin;
