@@ -28,7 +28,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL],
+    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -44,6 +44,7 @@ app.use((req, res, next) => {
 
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+     res.header("Access-Control-Allow-Credentials", "true");
     next();
 });
 
