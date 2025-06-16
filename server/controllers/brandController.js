@@ -31,7 +31,7 @@ exports.createBrand = async (req, res) => {
 // Get All Brands
 exports.getAllBrands = async (req, res) => {
   try {
-    const brands = await Brand.find();
+    const brands = await Brand.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: brands });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

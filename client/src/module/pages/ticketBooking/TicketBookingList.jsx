@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
     Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { Pagination } from "@/components/ui/pagination";
+
 import axios from "axios";
 import {
     Drawer,
@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/drawer";
 
 // Lucide Icons
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Trash2, MessageCircle } from "lucide-react";
 import TicketSheetWrapper from "@/module/pages/ticketBooking/TicketSheetWrapper";
 import { toast } from "react-toastify";
+import Pagination from "@/module/pages/pagination/Pagination"
 
 const FILTER_OPTIONS = [
     { value: "all", label: "All" },
@@ -49,17 +50,58 @@ const UserTicketTable = () => {
                 const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`, {
                     params: { page, filter },
                 });
+                console.log("Page:", page, "Data:", res.data.data); // 🔍 Debug log
                 setData(res.data.data);
                 setTotalPages(res.data.pagination.totalPages);
-                // toast.success("Data fetched successfully");
             } catch (err) {
-                // toast.error("Failed to fetch data");
                 console.error("Error fetching data", err);
             }
         };
 
         fetchData();
-    }, [filter, page]); // 👈 triggers re-fetch when either filter or page changes
+    }, [filter, page]);
+    // 👈 triggers re-fetch when either filter or page changes
+
+
+   const handleWhatsAppShare = (item, show) => {
+  const foodCourtLink = "https://pegasuscmc.com"; // Replace with actual link
+  const ticketLink = show.qr_code_link || "https://pegasustickets.com"; // Replace fallback if needed
+
+  const formattedShowDate = new Date(show.datetime).toLocaleString("en-IN", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+
+  const formattedPaymentDate = new Date(show.payment_time || show.datetime).toLocaleString("en-IN", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+
+  const message = `
+Hi ${item.name},
+🌟 Welcome to Pegasus 2k25 – the crown jewel of CMC!
+
+You have successfully booked ${show.ticket_count} ticket(s) for ${show.show_title}, scheduled on ${formattedShowDate} at ${show.location}.
+
+🎟️ Please use the link below to access your e-ticket and show it at entry:
+${ticketLink}
+🔐 Entry is only allowed upon showing the e-ticket from the link.
+
+✅ Your payment of ₹${show.amount} through ${show.payment_method} has been successfully received on ${formattedPaymentDate}.
+
+📍 Event Venue: ${show.location}
+
+🍴To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
+${foodCourtLink}
+
+🍽️ Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)
+`;
+
+  const encodedMessage = encodeURIComponent(message.trim());
+  const whatsappURL = `https://wa.me/91${item.phone}?text=${encodedMessage}`;
+
+  window.open(whatsappURL, "_blank");
+};
 
 
     const handleView = (item) => {
@@ -74,10 +116,10 @@ const UserTicketTable = () => {
 
     return (
         <>
-  <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-                    style={{ backgroundColor: "royalblue" }}>User Ticket Details</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+                style={{ backgroundColor: "#030049" }}>User Ticket Details</h2>
             <div className="flex justify-between items-center mb-4">
-              
+
                 <Select value={filter} onValueChange={setFilter}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select filter" />
@@ -100,6 +142,7 @@ const UserTicketTable = () => {
                         <TableHead>Notes</TableHead>
                         <TableHead>Show</TableHead>
                         <TableHead>Tickets</TableHead>
+                        <TableHead>Ticket Link</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Actions</TableHead>
                     </TableRow>
@@ -126,6 +169,7 @@ const UserTicketTable = () => {
                                         {firstShow?.show_title}
                                     </TableCell>
                                     <TableCell>{firstShow?.ticket_count}</TableCell>
+                                  <TableCell>{firstShow?.qr_code_link?.length > 10 ? `${firstShow.qr_code_link.slice(0, 10)}...` : firstShow?.qr_code_link}</TableCell>
                                     <TableCell>₹{parseFloat(firstShow?.amount || 0).toFixed(2)}</TableCell>
                                     <TableCell className="flex gap-2">
                                         <Button
@@ -137,10 +181,23 @@ const UserTicketTable = () => {
                                             <Edit className="w-4 h-4" />
                                         </Button>
 
-                                        <Button variant="secondary" size="icon" cursor onClick={() => handleView(item)}>
+                                        <Button
+                                            variant="secondary"
+                                            size="icon"
+                                            onClick={() => handleView(item)}
+                                        >
                                             <Eye className="w-4 h-4" />
                                         </Button>
+
+                                        <Button
+                                            variant="secondary"
+                                            size="icon"
+                                            onClick={() => handleWhatsAppShare(item, firstShow)}
+                                        >
+                                            <MessageCircle className="w-4 h-4 text-green-600" />
+                                        </Button>
                                     </TableCell>
+
                                 </TableRow>
                             );
                         })
@@ -219,8 +276,11 @@ const UserTicketTable = () => {
                     totalPages={totalPages}
                     onPageChange={setPage}
                 />
-            </div></>
+            </div>
+        </>
     );
 };
 
 export default UserTicketTable;
+
+

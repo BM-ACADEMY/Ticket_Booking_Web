@@ -88,7 +88,7 @@ const CustomerAttendanceList = () => {
 
   return (
     <>
-      <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm " style={{backgroundColor:"royalblue"}}>Attendance List </h2>
+      <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm " style={{backgroundColor:"#030049"}}>Attendance List </h2>
       <Table>
         <TableHeader>
           <TableRow>

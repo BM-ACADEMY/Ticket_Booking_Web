@@ -6,7 +6,7 @@ const Show = require("../models/showModel");
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       message: "Users retrieved successfully",
@@ -117,8 +117,8 @@ exports.createUser = async (req, res) => {
 exports.getUserTicketShowDetails = async (req, res) => {
   try {
     const { page = 1, limit = 5, filter = "all" } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
 
-    // Date filter logic
     const now = new Date();
     let matchDate = {};
 
@@ -136,7 +136,8 @@ exports.getUserTicketShowDetails = async (req, res) => {
       matchDate = { created_at: { $gte: startOfMonth } };
     }
 
-    const data = await Ticket.aggregate([
+    // Full aggregation pipeline
+    const pipeline = [
       { $match: matchDate },
       {
         $lookup: {
@@ -167,34 +168,36 @@ exports.getUserTicketShowDetails = async (req, res) => {
           qr_id: { $first: "$user.qr_id" },
           shows: {
             $push: {
-              ticket_id: "$_id", // ✅ include ticket _id here
+              ticket_id: "$_id",
               show_id: "$show._id",
               show_title: "$show.title",
               show_logo: "$show.logo",
               location: "$show.location",
               datetime: "$show.datetime",
               ticket_count: "$ticket_count",
-              qr_code_link:"$qr_code_link",
+              qr_code_link: "$qr_code_link",
               amount: { $toDouble: "$amount" },
               payment_method: "$payment_method",
             },
           },
         },
       },
-      { $skip: (Number(page) - 1) * Number(limit) },
-      { $limit: Number(limit) },
-    ]);
+      { $sort: { name: 1 } }, // Optional sort
+    ];
 
-    const totalUsers = await Ticket.distinct("user_id", matchDate);
+    const allData = await Ticket.aggregate(pipeline);
+    const total = allData.length;
+
+    const paginatedData = allData.slice(skip, skip + Number(limit));
 
     res.status(200).json({
       success: true,
-      data,
+      data: paginatedData,
       pagination: {
-        total: totalUsers.length,
+        total,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(totalUsers.length / limit),
+        totalPages: Math.ceil(total / Number(limit)),
       },
     });
   } catch (error) {
@@ -202,6 +205,8 @@ exports.getUserTicketShowDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
+
+
 
 // Update user by ID
 exports.updateUser = async (req, res) => {

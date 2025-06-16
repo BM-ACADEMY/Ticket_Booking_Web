@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import axios from "axios";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +16,11 @@ const TicketBookingForm = ({ shows }) => {
         phone: "",
         notes: "",
     });
-    const {user} =useAuth();
+    const { user } = useAuth();
     const [selectedShows, setSelectedShows] = useState([]);
     const [allShows, setAllShows] = useState([]);
     const [loadingShows, setLoadingShows] = useState(true);
+    const [paymentMethod, setPaymentMethod] = useState(""); // New state for payment method
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -31,10 +31,8 @@ const TicketBookingForm = ({ shows }) => {
         setSelectedShows((prev) => {
             const exists = prev.find((s) => s._id === show._id);
             if (exists) {
-                // If already selected, remove it (uncheck)
                 return prev.filter((s) => s._id !== show._id);
             } else {
-                // If not selected, add it
                 return [...prev, { ...show, ticket_count: 1 }];
             }
         });
@@ -57,11 +55,10 @@ const TicketBookingForm = ({ shows }) => {
         const fetchShows = async () => {
             try {
                 const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`);
-                setAllShows(res.data.data); // adjust if the data is nested differently
+                setAllShows(res.data.data);
                 // toast.success("Shows fetched successfully!");
             } catch (err) {
                 // toast.error("Failed to fetch shows.");
-
                 console.error(err);
             } finally {
                 setLoadingShows(false);
@@ -70,8 +67,9 @@ const TicketBookingForm = ({ shows }) => {
 
         fetchShows();
     }, []);
+
     const handleTicketCountChange = (showId, newCount) => {
-        if (newCount < 1) return; // Prevent invalid values
+        if (newCount < 1) return;
 
         setSelectedShows((prev) =>
             prev.map((s) =>
@@ -80,18 +78,15 @@ const TicketBookingForm = ({ shows }) => {
         );
     };
 
-
     const handleSubmit = async (method) => {
-
-        console.log(method,'method');
+        console.log(method, 'method');
         
-        if (!userInfo.name || !userInfo.phone || selectedShows.length === 0) {
-            toast.error("Please fill all required fields and select at least one show.");
+        if (!userInfo.name || !userInfo.phone || selectedShows.length === 0 || !method) {
+            toast.error("Please fill all required fields, select at least one show, and choose a payment method.");
             return;
         }
 
         try {
-            // Step 1: Create user
             const userResponse = await axios.post(
                 `${import.meta.env.VITE_BASE_URL}/users/create-user`,
                 userInfo
@@ -99,17 +94,15 @@ const TicketBookingForm = ({ shows }) => {
 
             const userId = userResponse.data.data._id;
 
-            // Step 2: Prepare ticket data
             const ticketPayload = selectedShows.map((s) => ({
                 user_id: userId,
                 show_id: s._id,
                 ticket_count: s.ticket_count,
-                created_by: user?._id || "default-admin-id", // Replace with actual admin ID if needed
+                created_by: user?._id || "default-admin-id",
                 amount: calculateAmount(s.price, s.ticket_count),
                 payment_method: method,
             }));
 
-            // Step 3: Book tickets
             const ticketResponse = await axios.post(
                 `${import.meta.env.VITE_BASE_URL}/tickets/create-ticket`,
                 ticketPayload
@@ -126,12 +119,14 @@ const TicketBookingForm = ({ shows }) => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <h2 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}>🎟️ Book Tickets</h2>
+                style={{ backgroundColor: "#030049" }}>
+                🎟️ Book Tickets
+            </h2>
 
             {/* User Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <Label htmlFor="name" className="mb-3  flex items-center gap-2">
+                    <Label htmlFor="name" className="mb-3 flex items-center gap-2">
                         <User className="w-4 h-4" />
                         Name
                     </Label>
@@ -144,9 +139,8 @@ const TicketBookingForm = ({ shows }) => {
                         required
                     />
                 </div>
-            
                 <div>
-                    <Label htmlFor="phone" className="mb-3  flex items-center gap-2">
+                    <Label htmlFor="phone" className="mb-3 flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         Phone
                     </Label>
@@ -160,7 +154,7 @@ const TicketBookingForm = ({ shows }) => {
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <Label htmlFor="notes" className="mb-3  flex items-center gap-2">
+                    <Label htmlFor="notes" className="mb-3 flex items-center gap-2">
                         <StickyNote className="w-4 h-4" />
                         Notes
                     </Label>
@@ -196,6 +190,11 @@ const TicketBookingForm = ({ shows }) => {
                                                 onCheckedChange={(checked) => handleShowSelect(show, checked)}
                                             />
                                             {show.title} — ₹{show.price}
+                                            {isSelected && show.qr_code_link && (
+                                                <span className="ml-2 text-sm text-gray-500">
+                                                    {show.qr_code_link.length > 10 ? `${show.qr_code_link.slice(0, 10)}...` : show.qr_code_link}
+                                                </span>
+                                            )}
                                         </Label>
                                     </div>
 
@@ -229,21 +228,43 @@ const TicketBookingForm = ({ shows }) => {
                 Total: ₹{totalAmount}
             </div>
 
-            {/* Payment Buttons */}
+            {/* Payment Method Selection */}
             <div className="flex gap-4 flex-wrap">
-                <Button onClick={() => handleSubmit("GPay")} variant="default" className="flex items-center gap-2 cursor-pointer">
+                <Button
+                    onClick={() => setPaymentMethod("GPay")}
+                    variant={paymentMethod === "GPay" ? "default" : "outline"}
+                    className="flex items-center gap-2 cursor-pointer"
+                >
                     <CreditCard className="w-4 h-4" />
                     Pay with GPay
                 </Button>
-                <Button onClick={() => handleSubmit("Cash")} variant="outline" className="flex items-center gap-2 cursor-pointer">
+                <Button
+                    onClick={() => setPaymentMethod("Cash")}
+                    variant={paymentMethod === "Cash" ? "default" : "outline"}
+                    className="flex items-center gap-2 cursor-pointer"
+                >
                     <Wallet className="w-4 h-4" />
                     Cash Payment
                 </Button>
-                <Button onClick={() => handleSubmit("Mess Bill")} variant="secondary" className="flex items-center gap-2 cursor-pointer">
+                <Button
+                    onClick={() => setPaymentMethod("Mess Bill")}
+                    variant={paymentMethod === "Mess Bill" ? "default" : "outline"}
+                    className="flex items-center gap-2 cursor-pointer"
+                >
                     <ReceiptText className="w-4 h-4" />
                     Mess Bill
                 </Button>
             </div>
+
+            {/* Submit Button */}
+            <Button
+                onClick={() => handleSubmit(paymentMethod)}
+                variant="default"
+                className="w-full mt-4"
+                disabled={!paymentMethod}
+            >
+                Submit
+            </Button>
         </div>
     );
 }

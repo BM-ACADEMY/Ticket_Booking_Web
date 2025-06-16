@@ -68,8 +68,18 @@ const data = {
     icon: Calendar,
   },
   {
-    title: "Brands",
-    url: "/brand",
+    title: "Sponsors Brands",
+    url: "/Sponsors-Brand",
+    icon: Tag,
+  },
+  {
+    title: "Associates Brands",
+    url: "/Associates-Brand",
+    icon: Tag,
+  },
+  {
+    title: "Event Brands",
+    url: "/Event-Brand",
     icon: Tag,
   },
   {
@@ -95,6 +105,10 @@ const data = {
       {
         title: "Sub Admin",
         url: "/new-members/sub-admin",
+      },
+      {
+        title: "Checker",
+        url: "/new-members/checker",
       },
     ],
   },
@@ -125,14 +139,14 @@ export function AppSidebar({ ...props }) {
 
   const filteredNavMain = getFilteredNavMain()
   return (
-    <Sidebar collapsible="icon" {...props}  style={{backgroundColor:"royalblue"}}>
-      <SidebarHeader  style={{backgroundColor:"royalblue"}}>
+    <Sidebar collapsible="icon" {...props}  style={{backgroundColor:"#030049"}}>
+      <SidebarHeader  style={{backgroundColor:"#030049"}}>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent  style={{backgroundColor:"royalblue"}}>
+      <SidebarContent  style={{backgroundColor:"#030049"}}>
         <NavMain items={filteredNavMain} />
       </SidebarContent>
-      <SidebarFooter  style={{backgroundColor:"royalblue"}}>
+      <SidebarFooter  style={{backgroundColor:"#030049"}}>
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
