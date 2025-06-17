@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 // Create Brand Associate
 exports.createBrandAssociate = async (req, res) => {
   try {
-    const { associateName } = req.body;
+    const { associateName,associateLink } = req.body;
 
     if (!associateName || !req.file) {
       return res.status(400).json({ success: false, message: "Associate name and logo are required" });
@@ -17,6 +17,7 @@ exports.createBrandAssociate = async (req, res) => {
 
     const newBrandAssociate = new BrandAssociate({
       associateName,
+      associateLink,
       associateLogo: logoPath,
     });
 
@@ -31,7 +32,7 @@ exports.createBrandAssociate = async (req, res) => {
 exports.getAllBrandAssociates = async (req, res) => {
   try {
     const brandAssociates = await BrandAssociate.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: brandAssociates });
+    res.status(200).json({ success: true,message:"Fetch associate sponser Successfully", data: brandAssociates });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -45,6 +46,7 @@ exports.updateBrandAssociate = async (req, res) => {
     if (!brandAssociate) return res.status(404).json({ success: false, message: "Brand associate not found" });
 
     const newAssociateName = req.body.associateName || brandAssociate.associateName;
+    const associateLink=req.body.associateLink || brandAssociate.associateLink
     let updatedLogoPath = brandAssociate.associateLogo;
 
     // If a new file is uploaded
@@ -60,6 +62,7 @@ exports.updateBrandAssociate = async (req, res) => {
     }
 
     brandAssociate.associateName = newAssociateName;
+    brandAssociate.associateLink = associateLink;
     brandAssociate.associateLogo = updatedLogoPath;
 
     await brandAssociate.save();

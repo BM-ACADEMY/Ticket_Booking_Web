@@ -1,34 +1,56 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
 
 const EventBrandFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
+    const DEFAULT_LINK = "https://cms.com";
+
     const [eventBrandName, setEventBrandName] = useState("");
-    const [eventBrandLogo, setEventBrandLogo] = useState(null); // File
+    const [eventBrandLogo, setEventBrandLogo] = useState(null);
+    const [eventBrandLink, setEventBrandLink] = useState(DEFAULT_LINK);
     const [preview, setPreview] = useState("");
 
-    // PATCH default values on edit
+    const isFormValid = eventBrandName.trim() !== "" && eventBrandLink.trim() !== "";
+
     useEffect(() => {
-        if (defaultValues) {
-            setEventBrandName(defaultValues.eventBrandName || "");
-            setPreview(defaultValues.eventBrandLogo || "");
+        if (open) {
+            if (defaultValues) {
+                setEventBrandName(defaultValues.eventBrandName || "");
+                setEventBrandLink(defaultValues.eventBrandLink || DEFAULT_LINK);
+                setPreview(defaultValues.eventBrandLogo || "");
+                setEventBrandLogo(null);
+            } else {
+                resetForm();
+            }
         } else {
-            setEventBrandName("");
-            setEventBrandLogo(null);
-            setPreview("");
+            resetForm();
         }
     }, [defaultValues, open]);
 
-    const handleSubmit = (e) => {
+    const resetForm = () => {
+        setEventBrandName("");
+        setEventBrandLogo(null);
+        setEventBrandLink(DEFAULT_LINK);
+        setPreview("");
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append("eventBrandName", eventBrandName);
+        formData.append("eventBrandLink", eventBrandLink);
         if (eventBrandLogo) {
             formData.append("eventBrandLogo", eventBrandLogo);
         }
-        onSubmit(formData);
+        try {
+            await onSubmit(formData); // Wait for the submission to complete
+            resetForm(); // Reset form after successful submission
+            onClose(); // Close the dialog
+        } catch (err) {
+            // Errors are handled in the parent, no need to close here
+        }
     };
 
     const handleFileChange = (e) => {
@@ -39,6 +61,11 @@ const EventBrandFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
         }
     };
 
+    const handleCancel = () => {
+        resetForm();
+        onClose();
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent>
@@ -47,7 +74,7 @@ const EventBrandFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <Label className="mb-3">Event Brand Name</Label>
+                        <Label className="mb-3">Event Sponsor Name</Label>
                         <Input
                             type="text"
                             value={eventBrandName}
@@ -56,7 +83,16 @@ const EventBrandFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
                         />
                     </div>
                     <div>
-                        <Label className="mb-3">Event Brand Logo</Label>
+                        <Label className="mb-3">Event Sponsor Link</Label>
+                        <Input
+                            type="text"
+                            value={eventBrandLink}
+                            onChange={(e) => setEventBrandLink(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <Label className="mb-3">Event Sponsor Logo</Label>
                         <Input
                             type="file"
                             accept="image/*"
@@ -67,13 +103,17 @@ const EventBrandFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
                         )}
                     </div>
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                        <Button type="submit">{defaultValues ? "Update" : "Create"}</Button>
+                        <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+                        <Button type="submit" disabled={!isFormValid}>
+                            {defaultValues ? "Update" : "Create"}
+                        </Button>
                     </div>
                 </form>
             </DialogContent>
         </Dialog>
     );
 };
+
+
 
 export default EventBrandFormDialog;

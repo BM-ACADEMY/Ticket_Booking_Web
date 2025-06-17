@@ -25,10 +25,10 @@ const adminSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    role_id: {
-      type: String,
+     role_id: {
+      type: String, // 👈 Must match Role.role_id (Number)
       required: true,
-      ref: "Role",
+      ref: "Role", // 👈 Important for population
     },
     email_otp: { type: Number },
     email_verified: { type: Boolean, default: false },

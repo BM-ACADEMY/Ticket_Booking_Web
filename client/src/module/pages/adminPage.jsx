@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
@@ -35,12 +36,16 @@ const AdminPage = () => {
   const [refresh, setRefresh] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Fetch role on mount
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
     const fetchRole = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/roles/fetch-all-roles`, {
           withCredentials: true,
@@ -54,53 +59,91 @@ const AdminPage = () => {
       } catch (err) {
         toast.error("Failed to fetch role");
         console.error("Failed to fetch role", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchRole();
   }, []);
+
+  // Validate form fields on change
+  useEffect(() => {
+    const validateForm = () => {
+      const newErrors = {};
+      let valid = true;
+
+      if (!otpSent) {
+        // Registration/Edit form validation
+        if (!form.name.trim()) {
+          newErrors.name = "Name is required";
+          valid = false;
+        }
+        if (!form.email.trim()) {
+          newErrors.email = "Email is required";
+          valid = false;
+        } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+          newErrors.email = "Invalid email format";
+          valid = false;
+        }
+        if (!form.phone.trim()) {
+          newErrors.phone = "Phone is required";
+          valid = false;
+        } else if (!/^\d{10}$/.test(form.phone)) {
+          newErrors.phone = "Phone must be 10 digits";
+          valid = false;
+        }
+
+        if (!editingAdmin) {
+          if (!form.password) {
+            newErrors.password = "Password is required";
+            valid = false;
+          } else if (form.password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters";
+            valid = false;
+          }
+          if (!form.confirmPassword) {
+            newErrors.confirmPassword = "Confirm your password";
+            valid = false;
+          } else if (form.password !== form.confirmPassword) {
+            newErrors.confirmPassword = "Passwords do not match";
+            valid = false;
+          }
+        }
+      } else {
+        // OTP form validation
+        if (!otp.trim()) {
+          newErrors.otp = "OTP is required";
+          valid = false;
+        } else if (otp.length !== 6) {
+          newErrors.otp = "OTP must be 6 digits";
+          valid = false;
+        }
+      }
+
+      setErrors(newErrors);
+      setIsFormValid(valid);
+    };
+    validateForm();
+  }, [form, otp, otpSent, editingAdmin]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     setForm((prev) => ({ ...prev, [name]: value }));
 
+    // Clear error for the changed field
     setErrors((prevErrors) => {
       const newErrors = { ...prevErrors };
       delete newErrors[name];
-
-      if (name === "password" || name === "confirmPassword") {
-        if (form.confirmPassword && value !== (name === "password" ? form.confirmPassword : form.password)) {
-          newErrors.confirmPassword = "Passwords do not match";
-        } else {
-          delete newErrors.confirmPassword;
-        }
-      }
-
       return newErrors;
     });
   };
 
   const handleRegister = async () => {
+    if (!isFormValid) return;
+
+    setLoading(true);
     try {
-      const newErrors = {};
-
-      if (!form.name.trim()) newErrors.name = "Name is required";
-      if (!form.email.trim()) newErrors.email = "Email is required";
-      else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Invalid email format";
-      if (!form.phone.trim()) newErrors.phone = "Phone is required";
-      else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = "Phone must be 10 digits";
-
-      if (!editingAdmin) {
-        if (!form.password) newErrors.password = "Password is required";
-        if (!form.confirmPassword) newErrors.confirmPassword = "Confirm your password";
-        if (form.password && form.confirmPassword && form.password !== form.confirmPassword) {
-          newErrors.confirmPassword = "Passwords do not match";
-        }
-      }
-
-      setErrors(newErrors);
-      if (Object.keys(newErrors).length > 0) return;
-
       const adminForm = {
         name: form.name,
         email: form.email,
@@ -120,16 +163,46 @@ const AdminPage = () => {
           { withCredentials: true }
         );
         toast.success("Admin updated successfully");
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+          role: "Admin",
+          role_id: role_id,
+        });
+        setEditingAdmin(null);
+        setRefresh(!refresh);
       } else {
         await axios.post(
           `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/create-admin-and-subAdmin`,
           adminForm,
           { withCredentials: true }
         );
-        setOtpSent(true);
         toast.success("Admin created successfully. OTP sent.");
+        setOtpSent(true);
       }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Operation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleVerifyOtp = async () => {
+    if (!isFormValid) return;
+
+    setLoading(true);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/verify-otp`,
+        { email: form.email, otp },
+        { withCredentials: true }
+      );
+      toast.success("OTP verified successfully");
+      setOtp("");
+      setOtpSent(false);
       setForm({
         name: "",
         email: "",
@@ -139,27 +212,11 @@ const AdminPage = () => {
         role: "Admin",
         role_id: role_id,
       });
-      setEditingAdmin(null);
-      setOtpSent(false);
-      setRefresh(!refresh);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Operation failed");
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/verify-otp`,
-        { email: form.email, otp },
-        { withCredentials: true }
-      );
-      toast.success("OTP verified successfully");
-      setOtpSent(false);
       setRefresh(!refresh);
     } catch (err) {
       toast.error(err.response?.data?.message || "OTP verification failed");
-      setOtpSent(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,9 +231,11 @@ const AdminPage = () => {
       role_id: admin.role_id,
     });
     setEditingAdmin(admin);
+    setOtpSent(false);
   };
 
   const handleDelete = async () => {
+    setLoading(true);
     try {
       await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/delete-admin-and-subAdmin/${adminToDelete}`,
@@ -190,6 +249,8 @@ const AdminPage = () => {
       toast.error(err.response?.data?.message || "Failed to delete admin");
       setShowDeleteDialog(false);
       setAdminToDelete(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -254,8 +315,31 @@ const AdminPage = () => {
         <Input name="role" value={form.role} readOnly className="pl-8 bg-gray-100 text-gray-600" />
       </div>
 
-      <Button className="w-full mt-4" onClick={handleRegister}>
-        {editingAdmin ? "Update Admin" : "Register"}
+      <Button
+        className="w-full mt-4 cursor-pointer flex items-center justify-center"
+        onClick={handleRegister}
+        disabled={!isFormValid || loading}
+      >
+        {loading ? (
+          <span className="inline-flex items-center">
+            <svg
+              className="animate-spin h-5 w-5 mr-2 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+              />
+            </svg>
+            Loading...
+          </span>
+        ) : (
+          editingAdmin ? "Update Admin" : "Register"
+        )}
       </Button>
     </>
   );
@@ -263,9 +347,40 @@ const AdminPage = () => {
   const renderOtpForm = () => (
     <>
       <Label className="text-sm">Enter OTP sent to your email</Label>
-      <Input placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} />
-      <Button className="w-full mt-4" onClick={handleVerifyOtp}>
-        Verify OTP
+      <Input
+        placeholder="Enter OTP"
+        value={otp}
+        onChange={(e) => {
+          setOtp(e.target.value);
+          setErrors((prev) => ({ ...prev, otp: "" }));
+        }}
+      />
+      {errors.otp && <p className="text-sm text-red-500">{errors.otp}</p>}
+      <Button
+        className="w-full mt-4 cursor-pointer flex items-center justify-center"
+        onClick={handleVerifyOtp}
+        disabled={!isFormValid || loading}
+      >
+        {loading ? (
+          <span className="inline-flex items-center">
+            <svg
+              className="animate-spin h-5 w-5 mr-2 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+              />
+            </svg>
+            Loading...
+          </span>
+        ) : (
+          "Verify OTP"
+        )}
       </Button>
     </>
   );
@@ -321,11 +436,39 @@ const AdminPage = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+              className="flex items-center justify-center"
+            >
+              {loading ? (
+                <span className="inline-flex items-center">
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                    />
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                "Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

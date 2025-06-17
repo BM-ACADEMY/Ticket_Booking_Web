@@ -7,7 +7,7 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const associateName = req.body.associateName || "default";
     const folderName = associateName.replace(/\s+/g, "_");
-    const uploadPath = path.join(__dirname, "..", "Uploads", "brandAssociates", folderName);
+    const uploadPath = path.join(__dirname, "..", "uploads", "brandAssociates", folderName);
 
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);

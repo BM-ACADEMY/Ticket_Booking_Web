@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       default: uuidv4,
     },
+    
     is_offline: {
       type: Boolean,
       default: false,

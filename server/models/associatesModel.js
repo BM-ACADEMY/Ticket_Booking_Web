@@ -10,6 +10,9 @@ const brandAssociateSchema = new mongoose.Schema({
     type: String, 
     required: true,
   },
+  associateLink: {
+    type: String, 
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model("BrandAssociate", brandAssociateSchema);

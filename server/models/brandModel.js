@@ -7,8 +7,11 @@ const brandSchema = new mongoose.Schema({
     trim: true,
   },
   brandLogo: {
-    type: String, // Path to uploaded file
+    type: String,
     required: true,
+  },
+  brandLink: {
+    type: String,
   },
 }, { timestamps: true });
 
