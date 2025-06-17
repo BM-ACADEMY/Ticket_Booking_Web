@@ -35,7 +35,7 @@ app.use(cors({
 }))
 
 app.use((req, res, next) => {
-    const allowedOrigins = [process.env.FRONTEND_URL, process.env.PRODUCTION_URL];
+    const allowedOrigins = [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com"]
     const origin = req.headers.origin;
     
     if (allowedOrigins.includes(origin)) {
