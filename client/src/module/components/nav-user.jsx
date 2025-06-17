@@ -151,7 +151,7 @@ export function NavUser() {
             <AlertDialogTitle>Daily Report Summary</AlertDialogTitle>
             <AlertDialogDescription>
               {/* Replace with real data if needed */}
-            <ReportList />
+            {/* <ReportList /> */}
               <p className="mt-2 text-sm">
                 Do you want to log out now?
               </p>

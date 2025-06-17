@@ -415,14 +415,65 @@ exports.updateTicket = async (req, res) => {
 // Delete ticket by ID
 exports.deleteTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    const admin = req.admin; // From your verifyAdminToken middleware
 
-    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ticket ID format",
+      });
+    }
 
-    res
-      .status(200)
-      .json({ success: false, message: "Ticket deleted successfully" });
+    // Find the ticket with associated show data
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    // Check permissions - only admin or ticket creator can delete
+    const isAdmin = admin.role.role_id === "1"; // Assuming "1" is admin role
+    const isCreator = ticket.created_by.toString() === admin._id.toString();
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized - Only admin or ticket creator can delete",
+      });
+    }
+
+    // Delete the ticket
+    const deletedTicket = await Ticket.findByIdAndDelete(id);
+
+    // Update report data if needed
+    if (isCreator) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      await Report.updateOne(
+        { admin_id: admin._id, report_date: today },
+        { $pull: { show_ids: ticket.show_id } }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Ticket deleted successfully",
+      data: {
+        deletedTicketId: deletedTicket._id,
+        showId: deletedTicket.show_id,
+        userId: deletedTicket.user_id,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Delete ticket error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting ticket",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
