@@ -16,12 +16,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
-
-
     totalShows: 0,
     totalTickets: 0,
     totalTurnover: 0,
@@ -29,25 +29,42 @@ const Dashboard = () => {
     monthlyData: [],
   });
 
+  const [roleFilter, setRoleFilter] = useState(""); // Default: show all (admin only)
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/dashboard/dashboarddata?filter=month${roleFilter ? `&roleFilter=${roleFilter}` : ""}`,
+        { withCredentials: true }
+      );
+      setStats(response.data.data);
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/dashboard/dashboarddata?filter=month`,
-          { withCredentials: true }
-        );
-        setStats(response.data.data);
-      } catch (error) {
-        console.error("Error fetching dashboard:", error);
-      }
-    };
     fetchStats();
-  }, []);
+  }, [roleFilter]);
 
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
         style={{ backgroundColor: "#030049" }}>Dashboard</h1>
+      {user?.role_id === 1 && (
+        <div className="mb-6 flex justify-center">
+          <select
+            className="border px-4 py-2 rounded text-sm"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="">-- Select Role to Filter --</option>
+            <option value="1">Admin</option>
+            <option value="2">SubAdmin</option>
+            <option value="3">Checker</option>
+          </select>
+        </div>
+      )}
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -161,3 +178,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
