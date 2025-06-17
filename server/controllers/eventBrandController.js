@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 // Create Event Brand
 exports.createEventBrand = async (req, res) => {
   try {
-    const { eventBrandName } = req.body;
+    const { eventBrandName,eventBrandLink } = req.body;
 
     if (!eventBrandName || !req.file) {
       return res.status(400).json({ success: false, message: "Event brand name and logo are required" });
@@ -17,6 +17,7 @@ exports.createEventBrand = async (req, res) => {
 
     const newEventBrand = new EventBrand({
       eventBrandName,
+      eventBrandLink,
       eventBrandLogo: logoPath,
     });
 
@@ -31,7 +32,7 @@ exports.createEventBrand = async (req, res) => {
 exports.getAllEventBrands = async (req, res) => {
   try {
     const eventBrands = await EventBrand.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: eventBrands });
+    res.status(200).json({ success: true,message:"Fetch event sponser successfully", data: eventBrands });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -45,6 +46,7 @@ exports.updateEventBrand = async (req, res) => {
     if (!eventBrand) return res.status(404).json({ success: false, message: "Event brand not found" });
 
     const newEventBrandName = req.body.eventBrandName || eventBrand.eventBrandName;
+    const eventBrandLink=req.body.eventBrandLink || eventBrand.eventBrandLink
     let updatedLogoPath = eventBrand.eventBrandLogo;
 
     // If a new file is uploaded
@@ -60,6 +62,7 @@ exports.updateEventBrand = async (req, res) => {
     }
 
     eventBrand.eventBrandName = newEventBrandName;
+    eventBrand.eventBrandLink = eventBrandLink;
     eventBrand.eventBrandLogo = updatedLogoPath;
 
     await eventBrand.save();

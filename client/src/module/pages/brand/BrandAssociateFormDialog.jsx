@@ -6,29 +6,52 @@ import { useEffect, useState } from "react";
 
 const BrandAssociateFormDialog = ({ open, onClose, onSubmit, defaultValues }) => {
     const [associateName, setAssociateName] = useState("");
-    const [associateLogo, setAssociateLogo] = useState(null); // File
+    const [associateLogo, setAssociateLogo] = useState(null);
+    const [associateLink, setAssociateLink] = useState("https://cms.com");
     const [preview, setPreview] = useState("");
+    const isFormValid = associateName.trim() !== "" && associateLink.trim() !== "";
 
-    // PATCH default values on edit
+    // Reset form or populate with default values
     useEffect(() => {
-        if (defaultValues) {
-            setAssociateName(defaultValues.associateName || "");
-            setPreview(defaultValues.associateLogo || "");
+        if (open) {
+            if (defaultValues) {
+                setAssociateName(defaultValues.associateName || "");
+                setAssociateLink(defaultValues.associateLink || "https://cms.com");
+                setPreview(defaultValues.associateLogo || "");
+                setAssociateLogo(null); // Reset file input
+            } else {
+                resetForm();
+            }
         } else {
-            setAssociateName("");
-            setAssociateLogo(null);
-            setPreview("");
+            resetForm();
         }
     }, [defaultValues, open]);
 
-    const handleSubmit = (e) => {
+    const resetForm = () => {
+        if (preview) {
+            URL.revokeObjectURL(preview); // Clean up object URL to prevent memory leaks
+        }
+        setAssociateName("");
+        setAssociateLogo(null);
+        setAssociateLink("https://cms.com");
+        setPreview("");
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append("associateName", associateName);
+        formData.append("associateLink", associateLink);
         if (associateLogo) {
             formData.append("associateLogo", associateLogo);
         }
-        onSubmit(formData);
+        try {
+            await onSubmit(formData); // Wait for parent logic to complete
+            resetForm(); // Reset form after successful submission
+            onClose(); // Close the dialog
+        } catch (err) {
+            // Errors are handled in the parent via toast, keep dialog open for retry
+        }
     };
 
     const handleFileChange = (e) => {
@@ -37,6 +60,11 @@ const BrandAssociateFormDialog = ({ open, onClose, onSubmit, defaultValues }) =>
         if (file) {
             setPreview(URL.createObjectURL(file));
         }
+    };
+
+    const handleCancel = () => {
+        resetForm();
+        onClose();
     };
 
     return (
@@ -56,6 +84,15 @@ const BrandAssociateFormDialog = ({ open, onClose, onSubmit, defaultValues }) =>
                         />
                     </div>
                     <div>
+                        <Label className="mb-3">Associate Link</Label>
+                        <Input
+                            type="text"
+                            value={associateLink}
+                            onChange={(e) => setAssociateLink(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div>
                         <Label className="mb-3">Associate Logo</Label>
                         <Input
                             type="file"
@@ -67,8 +104,12 @@ const BrandAssociateFormDialog = ({ open, onClose, onSubmit, defaultValues }) =>
                         )}
                     </div>
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                        <Button type="submit">{defaultValues ? "Update" : "Create"}</Button>
+                        <Button type="button" variant="outline" onClick={handleCancel}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={!isFormValid}>
+                            {defaultValues ? "Update" : "Create"}
+                        </Button>
                     </div>
                 </form>
             </DialogContent>

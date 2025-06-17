@@ -20,10 +20,10 @@ router.post("/reset-password/:token", adminController.resetPassword);
 router.get("/fetch-all-admin-and-subAdmin",verifyAdminToken ,adminController.getAllAdminsAndSubAdmins);
 
 // GET all admins
-router.get("/fetch-all-admin",verifyAdminToken ,adminController.getAllAdmins);
+router.get("/fetch-all-admins",verifyAdminToken ,adminController.getAllAdmins);
 
 // GET all sub-admins
-router.get("/fetch-all-subAdmin",verifyAdminToken ,adminController.getAllSubAdmins);
+router.get("/fetch-all-subAdmins",verifyAdminToken ,adminController.getAllSubAdmins);
 
 router.get("/fetch-all-checkers",verifyAdminToken ,adminController.getAllCheckers);
 

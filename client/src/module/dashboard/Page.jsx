@@ -24,11 +24,7 @@ import {
 import { Search } from "lucide-react"
 
 import { useAuth } from "@/module/context/AuthContext"
-<<<<<<< HEAD
 import logo2 from "@/assets/images/logo4.png"
-=======
-import logo2 from "@/assets/images/logo2.PNG"
->>>>>>> 8ae4cae4780f62573da650549ce1c120515c89e4
 
 const breadcrumbNameMap = {
   dashboard: "Dashboard",

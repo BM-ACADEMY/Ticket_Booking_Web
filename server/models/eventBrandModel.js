@@ -10,6 +10,9 @@ const eventBrandSchema = new mongoose.Schema({
     type: String, // Path to uploaded file
     required: true,
   },
+  eventBrandLink: {
+    type: String, // Path to uploaded file
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model("EventBrand", eventBrandSchema);

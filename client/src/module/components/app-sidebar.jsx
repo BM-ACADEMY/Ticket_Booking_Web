@@ -68,17 +68,17 @@ const data = {
     icon: Calendar,
   },
   {
-    title: "Sponsors Brands",
+    title: "Title Sponsors",
     url: "/Sponsors-Brand",
     icon: Tag,
   },
   {
-    title: "Associates Brands",
+    title: "Associates Sponsor",
     url: "/Associates-Brand",
     icon: Tag,
   },
   {
-    title: "Event Brands",
+    title: "Event Sponsor",
     url: "/Event-Brand",
     icon: Tag,
   },

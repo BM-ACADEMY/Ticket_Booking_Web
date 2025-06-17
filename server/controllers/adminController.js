@@ -30,6 +30,63 @@ exports.adminLogin = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
+    // Check if email is verified
+    if (!admin.email_verified) {
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000);
+      admin.email_otp = otp;
+      await admin.save();
+
+      // Send OTP via email
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        secure: true,
+        port: 465,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        to: admin.email,
+        subject: "Verify Your Pegasus Account",
+        html: `
+          <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+            <div style="max-width: 600px; margin: auto; background-color: #ffffff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
+              <div style="background-color: #000; color: #fff; text-align: center; padding: 20px;">
+                <h1 style="margin: 0;">Pegasus</h1>
+                <p style="margin: 0; font-size: 14px;">Secure Admin Panel</p>
+              </div>
+              <div style="padding: 30px;">
+                <h2 style="color: #333;">Verify Your Email</h2>
+                <p style="color: #555; font-size: 15px;">
+                  Please use the following One-Time Password (OTP) to verify your email address:
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                  <div style="display: inline-block; background-color: #000; color: #fff; padding: 15px 25px; border-radius: 6px; font-size: 24px; font-weight: bold; letter-spacing: 2px;">
+                    ${otp}
+                  </div>
+                </div>
+                <p style="color: #777; font-size: 14px;">
+                  This OTP is valid for a limited time. Do not share this code with anyone.
+                </p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                <p style="font-size: 12px; color: #aaa; text-align: center;">
+                  © ${new Date().getFullYear()} Pegasus Admin Panel. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      });
+
+      return res.status(403).json({
+        message: "Email not verified. OTP sent to your email.",
+        email: admin.email,
+      });
+    }
+
     // Compare password
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
@@ -91,23 +148,72 @@ exports.adminLogout = async (req, res) => {
 };
 
 // Get all Admins (not SubAdmins)
+
 exports.getAllAdmins = async (req, res) => {
   try {
-    // Step 1: Get the role_id for 'Admin'
+    // Step 1: Get pagination and filter parameters from query
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 records per page
+    const skip = (page - 1) * limit; // Calculate records to skip
+    const name = req.query.name || ""; // Filter by name (optional)
+    const phone = req.query.phone || ""; // Filter by phone (optional)
+
+    // Step 2: Get the role_id for 'Admin'
     const adminRole = await Role.findOne({ name: "Admin" }).sort({ createdAt: -1 });
 
     if (!adminRole) {
       return res.status(404).json({ message: "Admin role not found" });
     }
 
-    // Step 2: Find all admins with that role_id
-    const admins = await Admin.find({ role_id: adminRole.role_id }).select(
-      "-password"
-    );
+    // Step 3: Build query for admins
+    const query = {
+      role_id: adminRole.role_id,
+    };
 
-    res.status(200).json(admins);
+    // Add name filter if provided (case-insensitive partial match)
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // Case-insensitive regex
+    }
+
+    // Add phone filter if provided (partial match)
+    if (phone) {
+      query.phone = { $regex: phone, $options: "i" }; // Partial match
+    }
+
+    // Step 4: Get total count of matching admins
+    const totalAdmins = await Admin.countDocuments(query);
+
+    // Step 5: Find matching admins with pagination
+    const admins = await Admin.find(query)
+      .select("-password") // Exclude password field
+      .skip(skip)
+      .limit(limit);
+
+    // Step 6: Calculate total pages
+    const totalPages = Math.ceil(totalAdmins / limit);
+
+    // Step 7: Send paginated response
+    res.status(200).json({
+      admins,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalRecords: totalAdmins,
+        limit,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    // Enhanced error handling
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid ID format",
+        error: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -204,43 +310,141 @@ exports.resetPassword = async (req, res) => {
   }
 };
 // Get all SubAdmins
+
 exports.getAllSubAdmins = async (req, res) => {
   try {
-    // Step 1: Get the role_id for 'subAdmin'
+    // Step 1: Get pagination and filter parameters from query
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 records per page
+    const skip = (page - 1) * limit; // Calculate records to skip
+    const name = req.query.name || ""; // Filter by name (optional)
+    const phone = req.query.phone || ""; // Filter by phone (optional)
+
+    // Step 2: Get the role_id for 'subAdmin'
     const subAdminRole = await Role.findOne({ name: "subAdmin" }).sort({ createdAt: -1 });
 
     if (!subAdminRole) {
       return res.status(404).json({ message: "subAdmin role not found" });
     }
 
-    // Step 2: Get all admins with role_id matching subAdmin
-    const subAdmins = await Admin.find({
+    // Step 3: Build query for sub-admins
+    const query = {
       role_id: subAdminRole.role_id,
-    }).select("-password");
+    };
 
-    res.status(200).json(subAdmins);
+    // Add name filter if provided (case-insensitive partial match)
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // Case-insensitive regex
+    }
+
+    // Add phone filter if provided (partial match)
+    if (phone) {
+      query.phone = { $regex: phone, $options: "i" }; // Partial match
+    }
+
+    // Step 4: Get total count of matching sub-admins
+    const totalSubAdmins = await Admin.countDocuments(query);
+
+    // Step 5: Get paginated sub-admins
+    const subAdmins = await Admin.find(query)
+      .select("-password") // Exclude password field
+      .skip(skip)
+      .limit(limit);
+
+    // Step 6: Calculate total pages
+    const totalPages = Math.ceil(totalSubAdmins / limit);
+
+    // Step 7: Send paginated response
+    res.status(200).json({
+      subAdmins,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalRecords: totalSubAdmins,
+        limit,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    // Enhanced error handling
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid ID format",
+        error: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
+
 exports.getAllCheckers = async (req, res) => {
   try {
-    // Step 1: Get the role_id for 'Checker'
+    // Step 1: Get pagination and filter parameters from query
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 records per page
+    const skip = (page - 1) * limit; // Calculate records to skip
+    const name = req.query.name || ""; // Filter by name (optional)
+    const phone = req.query.phone || ""; // Filter by phone (optional)
+
+    // Step 2: Get the role_id for 'Checker'
     const checkerRole = await Role.findOne({ name: "Checker" }).sort({ createdAt: -1 });
 
     if (!checkerRole) {
       return res.status(404).json({ message: "Checker role not found" });
     }
 
-    // Step 2: Get all admins with role_id matching Checker
-    const checkers = await Admin.find({
+    // Step 3: Build query for checkers
+    const query = {
       role_id: checkerRole.role_id,
-    }).select("-password");
+    };
 
-    res.status(200).json({checkers:checkers});
+    // Add name filter if provided (case-insensitive partial match)
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // Case-insensitive regex
+    }
+
+    // Add phone filter if provided (partial match)
+    if (phone) {
+      query.phone = { $regex: phone, $options: "i" }; // Partial match
+    }
+
+    // Step 4: Get total count of matching checkers
+    const totalCheckers = await Admin.countDocuments(query);
+
+    // Step 5: Find matching checkers with pagination
+    const checkers = await Admin.find(query)
+      .select("-password") // Exclude password field
+      .skip(skip)
+      .limit(limit);
+
+    // Step 6: Calculate total pages
+    const totalPages = Math.ceil(totalCheckers / limit);
+
+    // Step 7: Send paginated response
+    res.status(200).json({
+      checkers,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalRecords: totalCheckers,
+        limit,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    // Enhanced error handling
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid ID format",
+        error: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -399,3 +603,5 @@ exports.deleteAdmin = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+

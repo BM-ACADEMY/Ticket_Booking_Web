@@ -11,6 +11,8 @@ router.get("/by-qrcode/:qrcode", userController.getUserTicketsByQRCode);
 // Get user ticket show details with pagination and filter
 router.get("/fetch-all-users-with-filter", userController.getUserTicketShowDetails);
 
+router.get("/admins-subadmins", userController.getAdminsAndSubAdmins);
+
 // Get user by ID
 router.get("/fetch-all-user-by/:id", userController.getUserById);
 
