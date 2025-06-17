@@ -11,6 +11,9 @@ import UserProfileUpdateForm from "@/module/pages/UserProfileUpdateForm";
 import UserTicketTable from "@/module/pages/ticketBooking/TicketBookingList"
 import ReportList from "@/module/pages/reports/ReportList";
 import BrandList from "@/module/pages/brand/BrandList";
+import CheckerPage from "@/module/pages/CheckerPage";
+import BrandAssociateList from "@/module/pages/brand/BrandAssociateList";
+import EventBrandList from "@/module/pages/brand/EventBrandList";
 
 export const routes = [
   { path: "/", element: <Navigate to="/dashboard" /> },
@@ -22,6 +25,7 @@ export const routes = [
   { path: "/attendance-list/customers", element: <CustomersAttendance /> },
   { path: "/new-members/admin", element: <AdminList /> },
   { path: "/new-members/sub-admin", element: <SubAdminList /> },
+  { path: "/new-members/checker", element: <CheckerPage /> },
   {
     path: "/account",
     element: <UserProfileUpdateForm />,
@@ -31,8 +35,16 @@ export const routes = [
     element: <ReportList />,
   },
   {
-    path: "/brand",
+    path: "/Sponsors-Brand",
     element: <BrandList />,
+  },
+  {
+    path: "/Associates-Brand",
+    element: <BrandAssociateList />,
+  },
+  {
+    path: "/Event-Brand",
+    element: <EventBrandList />,
   },
   
 ];

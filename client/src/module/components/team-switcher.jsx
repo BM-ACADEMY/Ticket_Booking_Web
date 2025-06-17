@@ -24,7 +24,7 @@ export function TeamSwitcher({ teams }) {
   }
 
   return (
-    <SidebarMenu style={{ backgroundColor: "royalblue" }}>
+    <SidebarMenu style={{ backgroundColor: "#030049" }}>
       <SidebarMenuItem>
         <SidebarMenuButton
           size="lg"

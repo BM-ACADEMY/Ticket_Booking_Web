@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
 
-    
+
     totalShows: 0,
     totalTickets: 0,
     totalTurnover: 0,
@@ -47,7 +47,7 @@ const Dashboard = () => {
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}>Dashboard</h1>
+        style={{ backgroundColor: "#030049" }}>Dashboard</h1>
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -91,13 +91,51 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+      {/* Today’s Payments Breakdown */}
+      <h2 className="text-xl font-semibold mb-4 mt-4 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "#030049" }}>Today’s Payment Breakdown</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {["GPay", "Cash", "Mess Bill"].map((method) => (
+          <Card key={method}>
+            <CardHeader>
+              <CardTitle>{method}</CardTitle>
+              <CardDescription>Today's Amount</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-green-700">
+                ₹{stats.todayPayments?.[method] || 0}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Total Payments Breakdown */}
+      <h2 className="text-xl font-semibold mt-4 mb-4 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "#030049" }}>Total Payment Breakdown</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {["GPay", "Cash", "Mess Bill"].map((method) => (
+          <Card key={method}>
+            <CardHeader>
+              <CardTitle>{method}</CardTitle>
+              <CardDescription>Total Amount</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-blue-700">
+                ₹{stats.totalPayments?.[method] || 0}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
 
       {/* Recharts Area Chart for Monthly Sales */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Monthly Sales Overview</CardTitle>
           <CardDescription>Total Turnover per Month (in ₹)</CardDescription>
- exemplo         </CardHeader>
+          exemplo         </CardHeader>
         <CardContent>
           <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>

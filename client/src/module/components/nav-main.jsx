@@ -25,7 +25,7 @@ export function NavMain({ items }) {
   console.log("NavMain items:", items);
   
   return (
-    <SidebarGroup  style={{backgroundColor:"royalblue"}}>
+    <SidebarGroup  style={{backgroundColor:"#030049"}}>
       <SidebarGroupLabel>Main</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>

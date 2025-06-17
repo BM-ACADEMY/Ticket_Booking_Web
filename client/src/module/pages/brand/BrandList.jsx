@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import BrandFormDialog from "./BrandFormDialog";
 import DeleteConfirmDialog from "./DeleteConfirmationDialog";
+import { toast } from "react-toastify";
 
 const BrandList = () => {
     const [brands, setBrands] = useState([]);
@@ -16,10 +17,11 @@ const BrandList = () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/brands/fetch-all-brands`);
             setBrands(res.data.data);
-            console.log(res,'brand');
-            
+            console.log(res, 'brand');
+            // toast.success(res.data.message || "Title sponsors fetched successfully");
         } catch (error) {
-            console.log('Error fetching brand')
+            console.error('Error fetching brands:', error);
+            // toast.error(error.response?.data?.message || "Something went wrong");
         }
     };
 
@@ -30,51 +32,78 @@ const BrandList = () => {
     const handleCreateOrUpdate = async (formData) => {
         try {
             if (selectedBrand) {
-                await axios.put(`${import.meta.env.VITE_BASE_URL}/brands/update-brand/${selectedBrand._id}`, formData);
+                const res = await axios.put(
+                    `${import.meta.env.VITE_BASE_URL}/brands/update-brand/${selectedBrand._id}`,
+                    formData
+                );
+                toast.success(res.data.message || "Title sponsor updated successfully");
             } else {
-                await axios.post(`${import.meta.env.VITE_BASE_URL}/brands/create-brand`, formData);
+                const res = await axios.post(
+                    `${import.meta.env.VITE_BASE_URL}/brands/create-brand`,
+                    formData
+                );
+                toast.success(res.data.message || "Title sponsor added successfully");
             }
-            fetchBrands();
-            setFormOpen(false);
-            setSelectedBrand(null);
+            await fetchBrands(); // Refresh the list
         } catch (err) {
             console.error("Error saving brand:", err);
+            toast.error(err.response?.data?.message || "Something went wrong");
+            throw err; // Propagate error to BrandFormDialog
         }
     };
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`${import.meta.env.VITE_BASE_URL}/brands/delete-brand/${deleteId}`);
-            fetchBrands();
+            const res = await axios.delete(
+                `${import.meta.env.VITE_BASE_URL}/brands/delete-brand/${deleteId}`
+            );
+            await fetchBrands();
             setDeleteOpen(false);
             setDeleteId(null);
+            toast.success(res.data.message || "Title sponsor deleted successfully");
         } catch (err) {
             console.error("Error deleting brand:", err);
+            toast.error(err.response?.data?.message || "Something went wrong");
         }
     };
 
     return (
         <div className="p-4 space-y-4">
-                    <h2
-      className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "royalblue" }}
-    >
-      Brand List
-    </h2>
+            <h2
+                className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
+                style={{ backgroundColor: "#030049" }}
+            >
+                Title Sponsor List
+            </h2>
             <div className="flex justify-between items-center">
-     
-                <Button onClick={() => setFormOpen(true)}><Plus className="mr-2 w-4 h-4" />Add Brand</Button>
+                <Button onClick={() => setFormOpen(true)}>
+                    <Plus className="mr-2 w-4 h-4" />Add Title Sponsor
+                </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {brands?.map((brand) => (
                     <div key={brand._id} className="p-4 border rounded-lg shadow space-y-2">
-                        <img src={`${brand.brandLogo}`} alt={brand.brandName} className="w-20 h-20 object-cover" />
+                        <img src={`${brand.brandLogo}`} alt={brand.brandName} className="w-20 h-20 object-contain" />
                         <p className="font-semibold">{brand.brandName}</p>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => { setSelectedBrand(brand); setFormOpen(true); }}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSelectedBrand(brand);
+                                    setFormOpen(true);
+                                }}
+                            >
                                 <Pencil className="w-4 h-4" />
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={() => { setDeleteId(brand._id); setDeleteOpen(true); }}>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                    setDeleteId(brand._id);
+                                    setDeleteOpen(true);
+                                }}
+                            >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
                         </div>
@@ -84,7 +113,10 @@ const BrandList = () => {
 
             <BrandFormDialog
                 open={formOpen}
-                onClose={() => { setFormOpen(false); setSelectedBrand(null); }}
+                onClose={() => {
+                    setFormOpen(false);
+                    setSelectedBrand(null);
+                }}
                 onSubmit={handleCreateOrUpdate}
                 defaultValues={selectedBrand}
             />

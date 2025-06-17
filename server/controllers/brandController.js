@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 // Create Brand
 exports.createBrand = async (req, res) => {
   try {
-    const { brandName } = req.body;
+    const { brandName,brandLink } = req.body;
 
     if (!brandName || !req.file) {
       return res.status(400).json({ success: false, message: "Brand name and logo are required" });
@@ -17,6 +17,7 @@ exports.createBrand = async (req, res) => {
 
     const newBrand = new Brand({
       brandName,
+      brandLink,
       brandLogo: logoPath,
     });
 
@@ -31,8 +32,8 @@ exports.createBrand = async (req, res) => {
 // Get All Brands
 exports.getAllBrands = async (req, res) => {
   try {
-    const brands = await Brand.find();
-    res.status(200).json({ success: true, data: brands });
+    const brands = await Brand.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true,message:"Fetch title sponser successfully", data: brands });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -46,6 +47,7 @@ exports.updateBrand = async (req, res) => {
     if (!brand) return res.status(404).json({ success: false, message: "Brand not found" });
 
     const newBrandName = req.body.brandName || brand.brandName;
+    const brandLink=req.body.brandLink || brand.brandLink;
     let updatedLogoPath = brand.brandLogo;
 
     // If a new file is uploaded
@@ -61,6 +63,7 @@ exports.updateBrand = async (req, res) => {
     }
 
     brand.brandName = newBrandName;
+    brand.brandLink=brandLink;
     brand.brandLogo = updatedLogoPath;
 
     await brand.save();

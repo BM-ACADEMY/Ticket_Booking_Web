@@ -2,17 +2,20 @@ const User = require("../models/userModel");
 const Ticket = require("../models/ticketModel");
 const Show = require("../models/showModel");
 
+
+
 exports.getDashboardStats = async (req, res) => {
   try {
-    const { filter = "month" } = req.query; // Default to current month
+    const { filter = "month" } = req.query;
 
-    // Date filter logic for tickets
     const now = new Date();
     let matchDate = {};
 
     if (filter === "today") {
-      const start = new Date(now.setHours(0, 0, 0, 0));
-      const end = new Date(now.setHours(23, 59, 59, 999));
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
       matchDate = { created_at: { $gte: start, $lte: end } };
     } else if (filter === "week") {
       const startOfWeek = new Date();
@@ -24,13 +27,9 @@ exports.getDashboardStats = async (req, res) => {
       matchDate = { created_at: { $gte: startOfMonth } };
     }
 
-    // Fetch total users
     const totalUsers = await User.countDocuments();
-
-    // Fetch total shows
     const totalShows = await Show.countDocuments();
 
-    // Fetch total tickets and total turnover
     const ticketStats = await Ticket.aggregate([
       { $match: matchDate },
       {
@@ -42,47 +41,86 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Fetch monthly sales data for the chart (last 12 months)
-    const monthlyStats = await Ticket.aggregate([
+    // ✅ Today payment breakdown
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todayPaymentStats = await Ticket.aggregate([
       {
         $match: {
-          created_at: {
-            $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1),
-          },
+          created_at: { $gte: todayStart, $lte: todayEnd },
         },
       },
       {
         $group: {
-          _id: {
-            year: { $year: "$created_at" },
-            month: { $month: "$created_at" },
-          },
-          revenue: { $sum: { $toDouble: "$amount" } },
+          _id: "$payment_method",
+          totalAmount: { $sum: { $toDouble: "$amount" } },
         },
       },
-      {
-        $project: {
-          name: {
-            $concat: [
-              { $toString: "$_id.month" },
-              "-",
-              { $toString: "$_id.year" },
-            ],
-          },
-          revenue: 1,
-          _id: 0,
-        },
-      },
-      { $sort: { name: 1 } },
     ]);
+
+    const totalPaymentStats = await Ticket.aggregate([
+      {
+        $group: {
+          _id: "$payment_method",
+          totalAmount: { $sum: { $toDouble: "$amount" } },
+        },
+      },
+    ]);
+
+    // Format breakdowns
+    const formatPayments = (stats) => {
+      const methods = ['GPay', 'Cash', 'Mess Bill'];
+      const result = {};
+      methods.forEach((method) => {
+        const entry = stats.find((s) => s._id === method);
+        result[method] = entry ? entry.totalAmount : 0;
+      });
+      return result;
+    };
 
     const stats = {
       totalUsers,
       totalShows,
       totalTickets: ticketStats[0]?.totalTickets || 0,
       totalTurnover: ticketStats[0]?.totalTurnover || 0,
-      confirmedTickets: 0, // Set to 0 since ticketSchema has no status field
-      monthlyData: monthlyStats,
+      confirmedTickets: 0,
+      monthlyData: await Ticket.aggregate([
+        {
+          $match: {
+            created_at: {
+              $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$created_at" },
+              month: { $month: "$created_at" },
+            },
+            revenue: { $sum: { $toDouble: "$amount" } },
+          },
+        },
+        {
+          $project: {
+            name: {
+              $concat: [
+                { $toString: "$_id.month" },
+                "-",
+                { $toString: "$_id.year" },
+              ],
+            },
+            revenue: 1,
+            _id: 0,
+          },
+        },
+        { $sort: { name: 1 } },
+      ]),
+      todayPayments: formatPayments(todayPaymentStats),
+      totalPayments: formatPayments(totalPaymentStats),
     };
 
     res.status(200).json({

@@ -20,10 +20,12 @@ router.post("/reset-password/:token", adminController.resetPassword);
 router.get("/fetch-all-admin-and-subAdmin",verifyAdminToken ,adminController.getAllAdminsAndSubAdmins);
 
 // GET all admins
-router.get("/fetch-all-admin",verifyAdminToken ,adminController.getAllAdmins);
+router.get("/fetch-all-admins",verifyAdminToken ,adminController.getAllAdmins);
 
 // GET all sub-admins
-router.get("/fetch-all-subAdmin",verifyAdminToken ,adminController.getAllSubAdmins);
+router.get("/fetch-all-subAdmins",verifyAdminToken ,adminController.getAllSubAdmins);
+
+router.get("/fetch-all-checkers",verifyAdminToken ,adminController.getAllCheckers);
 
 // GET admin by id
 router.get("/:id", verifyAdminToken,adminController.getAdminById);
@@ -44,6 +46,6 @@ router.post("/logout", adminController.adminLogout);
 router.put("/update-admin-and-subAdmin/:id", adminController.updateAdmin);
 
 // DELETE admin by id
-router.delete("/delete-admin-and subAdmin/:id", adminController.deleteAdmin);
+router.delete("/delete-admin-and-subAdmin/:id", adminController.deleteAdmin);
 
 module.exports = router;

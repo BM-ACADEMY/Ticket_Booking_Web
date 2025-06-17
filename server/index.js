@@ -17,6 +17,8 @@ const attendanceRoutes = require("./routes/attendanceRoute");
 const reportRoutes = require("./routes/reportsRoute");
 const dashboardRoutes = require("./routes/dashboardRoute");
 const brandRoutes=require("./routes/brandRoute");
+const associateBrand=require("./routes/associatesRoute")
+const eventBrand=require("./routes/eventBrandRoute");
 
 // Load env variables
 dotenv.config();
@@ -26,7 +28,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL],
+    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -42,6 +44,7 @@ app.use((req, res, next) => {
 
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+     res.header("Access-Control-Allow-Credentials", "true");
     next();
 });
 
@@ -70,12 +73,16 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/brands",brandRoutes);
+app.use("/api/associate-brand",associateBrand);
+app.use("/api/event-brand",eventBrand);
+
+
 
 // Connect DB and then start server
 connectDB()
   .then(() => {
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    app.listen(PORT,'0.0.0.0', () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
   })

@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
 const adminSchema = new mongoose.Schema(
   {
@@ -24,12 +23,12 @@ const adminSchema = new mongoose.Schema(
     },
     token: {
       type: String,
-      default: null, // Used for password reset or email verification
+      default: null,
     },
-    role_id: {
-      type: String,
+     role_id: {
+      type: String, // 👈 Must match Role.role_id (Number)
       required: true,
-      ref: "Role", // references Roles.role_id
+      ref: "Role", // 👈 Important for population
     },
     email_otp: { type: Number },
     email_verified: { type: Boolean, default: false },
@@ -38,13 +37,6 @@ const adminSchema = new mongoose.Schema(
     timestamps: { createdAt: "created_at", updatedAt: false },
   }
 );
-
-// Encrypt password before saving
-adminSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
 
 const Admin = mongoose.model("Admin", adminSchema);
 module.exports = Admin;
