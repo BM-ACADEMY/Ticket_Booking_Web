@@ -304,8 +304,8 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
     phone: "",
     notes: "",
   });
+  const [userId, setUserId] = useState(null); // Add userId state
   const { user } = useAuth();
-
   const [isEditMode, setIsEditMode] = useState(!!editData);
   const [selectedShows, setSelectedShows] = useState([]);
   const [allShows, setAllShows] = useState([]);
@@ -313,22 +313,24 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
 
+  // Initialize form with editData
   useEffect(() => {
     if (editData) {
+      setUserId(editData._id || null); // Set userId from editData
       setUserInfo({
         name: editData?.name || "",
         phone: editData?.phone || "",
         notes: editData?.notes || "",
       });
-
       setSelectedShows(
         editData.shows?.map((ticket) => ({
           _id: ticket.show_id,
           title: ticket.show_title,
-          price: ticket.amount,
+          price: ticket.amount / ticket.ticket_count, // Correct price calculation
           ticket_count: ticket.ticket_count,
         })) || []
       );
+      setPaymentMethod(editData.shows?.[0]?.payment_method || "");
     }
   }, [editData]);
 
@@ -348,14 +350,19 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
     });
   };
 
-  const handleTicketChange = (id, count) => {
-    setSelectedShows((prev) =>
-      prev.map((s) => (s._id === id ? { ...s, ticket_count: count } : s))
-    );
+  const handleTicketCountChange = (showId, newCount) => {
+    if (newCount === "" || /^\d+$/.test(newCount)) {
+      setSelectedShows((prev) =>
+        prev.map((s) =>
+          s._id === showId
+            ? { ...s, ticket_count: newCount === "" ? "" : parseInt(newCount, 10) }
+            : s
+        )
+      );
+    }
   };
 
-  const calculateAmount = (price, count) =>
-    Number(price) * Number(count || 0);
+  const calculateAmount = (price, count) => Number(price) * Number(count || 0);
 
   const totalAmount = selectedShows.reduce(
     (acc, s) => acc + calculateAmount(s.price, s.ticket_count),
@@ -369,7 +376,7 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
           `${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`
         );
         setAllShows(res.data.data);
-        toast.success("Shows fetched successfully!");
+        // toast.success("Shows fetched successfully!");
       } catch (err) {
         toast.error("Failed to fetch shows.");
         console.error(err);
@@ -381,68 +388,75 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
     fetchShows();
   }, []);
 
-  const handleTicketCountChange = (showId, newCount) => {
-    if (newCount < 1) return;
-    setSelectedShows((prev) =>
-      prev.map((s) =>
-        s._id === showId ? { ...s, ticket_count: newCount } : s
-      )
-    );
-  };
-
-const handleSubmit = async () => {
-  if (!userInfo.name || !userInfo.phone || selectedShows.length === 0 || !paymentMethod) {
-    toast.error("Please fill all fields, select shows and payment method.");
+ const handleUpdate = async (method, userId) => {
+  if (!userInfo.name || !userInfo.phone || selectedShows.length === 0 || !method) {
+    toast.error("Please fill all required fields, select at least one show, and choose a payment method.");
     return;
   }
 
+  if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+    toast.error("A valid user ID is required. Please select an existing user.");
+    return;
+  }
+
+  if (!user?._id || !/^[0-9a-fA-F]{24}$/.test(user._id)) {
+    toast.error("Invalid or missing admin ID. Please log in as an admin.");
+    return;
+  }
+
+  setLoading(true);
+
   try {
-    setLoading(true);
+    // Sanitize selectedShows
+    const sanitizedShows = selectedShows.map((s) => ({
+      _id: s._id,
+      ticket_count: s.ticket_count,
+      price: s.price,
+    }));
 
-    const userResponse = await axios.put(
-      `${import.meta.env.VITE_BASE_URL}/users/update-user/${editData?._id}`,
-      userInfo
+    // Prepare payload
+    const updatePayload = {
+      userInfo: { ...userInfo },
+      tickets: sanitizedShows.map((s) => ({
+        show_id: s._id,
+        ticket_count: s.ticket_count,
+        amount: calculateAmount(s.price, s.ticket_count),
+        payment_method: method,
+        created_by: user._id,
+      })),
+    };
+
+    console.log("Sending update request with userId:", userId);
+    console.log("Update payload:", updatePayload);
+
+    // Call the update API
+    const response = await axios.put(
+      `${import.meta.env.VITE_BASE_URL}/users/update-user/${userId}`,
+      updatePayload
     );
 
-    const userId = userResponse.data.data._id;
-    toast.success("User information updated!");
-
-    await Promise.all(
-      editData.shows.map((s) =>
-        axios.put(
-          `${import.meta.env.VITE_BASE_URL}/tickets/update-ticket/${s.ticket_id}`,
-          {
-            user_id: userId,
-            show_id: s._id,
-            ticket_count: s.ticket_count,
-            created_by: user?._id || "default-admin-id",
-            amount: calculateAmount(s.amount, s.ticket_count),
-            payment_method: paymentMethod,
-          }
-        )
-      )
-    );
-
-    toast.success("Tickets updated!");
-
-    // ✅ Reset the form after successful update
+    toast.success("User and tickets updated successfully!");
+    // Reset form
     setUserInfo({ name: "", phone: "", notes: "" });
     setSelectedShows([]);
-    setPaymentMethod(""); // Optional
-    onClose?.(); // Close the modal or drawer if applicable
+    setPaymentMethod("");
+    setUserId(null);
+    if (onClose) onClose();
   } catch (err) {
     const errorMessage =
-      err.response?.data?.message || err.message || "Update failed";
+      err.response?.data?.message || err.message || "Something went wrong";
+    console.error("Update error:", errorMessage);
     toast.error(errorMessage);
   } finally {
     setLoading(false);
   }
 };
 
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold bg-[#fafafa] p-2 rounded-sm">🎟️ Book Tickets</h2>
+      <h2 className="text-2xl font-bold bg-[#fafafa] p-2 rounded-sm">
+        🎟️ {isEditMode ? "Update Tickets" : "Book Tickets"}
+      </h2>
 
       {/* User Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -572,8 +586,8 @@ const handleSubmit = async () => {
       {/* Update Button */}
       <div className="mt-4">
         <Button
-          onClick={handleSubmit}
-          disabled={loading || !paymentMethod}
+          onClick={() => handleUpdate(paymentMethod, userId)} // Pass method and userId
+          disabled={loading || !paymentMethod || !userInfo.name || !userInfo.phone || selectedShows.length === 0}
           className="flex items-center gap-2"
         >
           {loading ? (
@@ -598,7 +612,7 @@ const handleSubmit = async () => {
               ></path>
             </svg>
           ) : (
-            "Update"
+            isEditMode ? "Update" : "Book"
           )}
         </Button>
       </div>

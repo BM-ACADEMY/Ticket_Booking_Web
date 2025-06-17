@@ -2,9 +2,12 @@ const User = require("../models/userModel");
 const mongoose = require("mongoose");
 const Ticket = require("../models/ticketModel");
 const Show = require("../models/showModel");
-const Admin =require('../models/adminModel');
+const Admin = require("../models/adminModel");
 const { isValidObjectId } = require("mongoose");
-
+const path = require("path");
+const fs = require("fs");
+const Report = require("../models/reportsModel");
+const QRCode = require("qrcode");
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
@@ -100,7 +103,6 @@ exports.getUserById = async (req, res) => {
 //   }
 // };
 
-
 exports.getUserTicketsByQRCode = async (req, res) => {
   try {
     const { qrcode } = req.params;
@@ -110,7 +112,9 @@ exports.getUserTicketsByQRCode = async (req, res) => {
     const user = await mongoose.model("User").findOne({ qr_id: qrcode });
     if (!user) {
       console.log(`No user found for qr_id: ${qrcode}`);
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     console.log(`User found: _id=${user._id}, name=${user.name}`);
 
@@ -197,7 +201,9 @@ exports.getUserTicketsByQRCode = async (req, res) => {
     // Filter out invalid shows (e.g., where show lookup failed)
     data[0].shows = data[0].shows.filter((show) => show.show_id);
 
-    console.log(`Tickets found for user: _id=${user._id}, shows=${data[0].shows.length}`);
+    console.log(
+      `Tickets found for user: _id=${user._id}, shows=${data[0].shows.length}`
+    );
     return res.status(200).json({ success: true, data: data[0] });
   } catch (err) {
     console.error(`Error fetching tickets for qr_id: ${qrcode}`, err);
@@ -221,8 +227,6 @@ exports.createUser = async (req, res) => {
       .json({ success: false, message: "Failed to create user", error: err });
   }
 };
-
-
 
 // exports.getUserTicketShowDetails = async (req, res) => {
 //   try {
@@ -411,7 +415,7 @@ exports.getUserTicketShowDetails = async (req, res) => {
       filter = "all",
       createdBy,
       createdAt,
-      name = ""
+      name = "",
     } = req.query;
 
     const pageNum = Number(page);
@@ -419,15 +423,21 @@ exports.getUserTicketShowDetails = async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     if (pageNum < 1 || limitNum < 1) {
-      return res.status(400).json({ success: false, message: "Invalid page or limit" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid page or limit" });
     }
 
     if (!["all", "today", "week", "month"].includes(filter)) {
-      return res.status(400).json({ success: false, message: "Invalid filter value" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid filter value" });
     }
 
     if (createdBy && !mongoose.isValidObjectId(createdBy)) {
-      return res.status(400).json({ success: false, message: "Invalid createdBy ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid createdBy ID" });
     }
 
     let matchDate = {};
@@ -450,7 +460,11 @@ exports.getUserTicketShowDetails = async (req, res) => {
       startOfWeek.setHours(0, 0, 0, 0);
       matchDate.created_at = { $gte: startOfWeek };
     } else if (filter === "month") {
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const startOfMonth = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1
+      );
       matchDate.created_at = { $gte: startOfMonth };
     }
 
@@ -459,7 +473,9 @@ exports.getUserTicketShowDetails = async (req, res) => {
     if (createdBy) {
       const creator = await Admin.findById({ _id: createdBy }, { role_id: 1 });
       if (!creator) {
-        return res.status(404).json({ success: false, message: "Creator not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Creator not found" });
       }
       if (creator.role_id !== "1") {
         applyCreatedByFilter = true;
@@ -526,7 +542,10 @@ exports.getUserTicketShowDetails = async (req, res) => {
               $switch: {
                 branches: [
                   { case: { $eq: ["$creator.role_id", "1"] }, then: "admin" },
-                  { case: { $eq: ["$creator.role_id", "2"] }, then: "subadmin" },
+                  {
+                    case: { $eq: ["$creator.role_id", "2"] },
+                    then: "subadmin",
+                  },
                   { case: { $eq: ["$creator.role_id", "3"] }, then: "checker" },
                 ],
                 default: "unknown",
@@ -598,12 +617,15 @@ exports.getUserTicketShowDetails = async (req, res) => {
   } catch (error) {
     console.error("Error in getUserTicketShowDetails:", error);
     if (error.name === "CastError") {
-      return res.status(400).json({ success: false, message: "Invalid ID format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid ID format" });
     }
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 exports.getAdminsAndSubAdmins = async (req, res) => {
   try {
@@ -627,13 +649,18 @@ exports.getAdminsAndSubAdmins = async (req, res) => {
         },
       },
     ]);
-    console.log(creators,'cre');
-    
+    console.log(creators, "cre");
+
     const mappedCreators = creators.map((creator) => ({
       _id: creator._id,
       name: creator.name,
       email: creator.email,
-      role: creator.role_id === "1" ? "admin" : creator.role_id === "2" ? "subadmin" : "checker",
+      role:
+        creator.role_id === "1"
+          ? "admin"
+          : creator.role_id === "2"
+          ? "subadmin"
+          : "checker",
       role_id: creator.role_id,
       role_name: creator.name || "Unknown",
     }));
@@ -674,38 +701,176 @@ exports.getAdminsAndSubAdmins = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, phone, notes, is_offline } = req.body;
+    const { userId } = req.params;
+    const { userInfo, tickets } = req.body;
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    // Validate userId
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing userId",
+      });
     }
 
-    // Only allow specific fields to be updated
-    const updateData = { name, phone, notes, is_offline };
+    // Validate input
+    if (!userInfo || !tickets || !Array.isArray(tickets) || tickets.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payload: userInfo and non-empty tickets array are required",
+      });
+    }
 
+    // Validate show_id and created_by in tickets
+    for (const ticket of tickets) {
+      if (!mongoose.Types.ObjectId.isValid(ticket.show_id)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid show_id: ${ticket.show_id}`,
+        });
+      }
+      if (!mongoose.Types.ObjectId.isValid(ticket.created_by)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid created_by: ${ticket.created_by}`,
+        });
+      }
+      if (typeof ticket.amount !== "number" || ticket.amount < 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid amount: ${ticket.amount}`,
+        });
+      }
+    }
+
+    // Update user information
     const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $set: updateData },
+      userId,
+      {
+        name: userInfo.name,
+        phone: userInfo.phone,
+        notes: userInfo.notes || "",
+        is_offline: userInfo.is_offline || false,
+      },
       { new: true, runValidators: true }
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    res.status(200).json({
+    // Delete existing tickets for the user
+    await Ticket.deleteMany({ user_id: userId });
+
+    // Prepare new tickets to insert
+    const newTickets = tickets.map((t) => ({
+      user_id: userId,
+      show_id: t.show_id,
+      ticket_count: t.ticket_count,
+      amount: mongoose.Types.Decimal128.fromString(t.amount.toString()), // Convert to Decimal128
+      payment_method: t.payment_method,
+      created_by: t.created_by,
+      qr_code_link: updatedUser.qr_id
+        ? `${process.env.FRONTEND_QRCODE_URL}/${updatedUser.qr_id}`
+        : null,
+    }));
+
+    // Insert new tickets
+    const insertedTickets = await Ticket.insertMany(newTickets);
+
+    // Generate or reuse QR code
+    const qrData = updatedUser.qr_id;
+    const qrFileName = `qr-${updatedUser._id}-${Date.now()}.png`;
+    const qrDirPath = path.join(__dirname, "../public/qrcodes");
+
+    if (!fs.existsSync(qrDirPath)) {
+      fs.mkdirSync(qrDirPath, { recursive: true });
+    }
+
+    const qrFilePath = path.join(qrDirPath, qrFileName);
+    await QRCode.toFile(qrFilePath, qrData);
+
+    // Update report
+    const showIds = [...new Set(newTickets.map((t) => t.show_id.toString()))];
+    const adminId = tickets[0].created_by;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    await Report.findOneAndUpdate(
+      { admin_id: adminId, report_date: today },
+      {
+        $addToSet: { show_ids: { $each: showIds } },
+        $setOnInsert: { generated_at: new Date() },
+      },
+      { upsert: true, new: true }
+    );
+
+    // Send SMS for inserted tickets
+    for (const ticket of insertedTickets) {
+      const show = await Show.findById(ticket.show_id);
+      const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
+
+      const message = `Hi ${
+        updatedUser.name
+      }, your booking for Pegasus 2k25 has been updated!
+
+You have booked ${ticket.ticket_count} ticket(s) for ${
+        show.title
+      } on ${new Date(show.datetime).toLocaleString("en-IN")} at ${
+        show.location
+      }.
+E-ticket: ${ticket.qr_code_link}
+Entry allowed only if you show the e-ticket from this link.
+
+Payment of ₹${parseFloat(ticket.amount)} via ${
+        ticket.payment_method
+      } received on ${ticketDate}.
+
+To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
+[Food Court Link]
+
+Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)`;
+
+      // Uncomment and configure SMS API call if needed
+      /*
+      await axios.post(
+        "https://www.fast2sms.com/dev/bulkV2",
+        {
+          route: "q",
+          message,
+          language: "english",
+          flash: 0,
+          numbers: updatedUser.phone,
+        },
+        {
+          headers: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      */
+    }
+
+    return res.status(200).json({
       success: true,
-      message: "User updated successfully",
-      data: updatedUser,
+      message: "User and tickets updated successfully",
+      data: {
+        user: updatedUser,
+        tickets: insertedTickets,
+      },
     });
-  } catch (err) {
-    console.error(`Error updating user: _id=${req.params.id}`, err);
-    res.status(400).json({ success: false, message: "Failed to update user" });
+  } catch (error) {
+    console.error("Update error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
-
 // Delete user by ID
 exports.deleteUser = async (req, res) => {
   try {
