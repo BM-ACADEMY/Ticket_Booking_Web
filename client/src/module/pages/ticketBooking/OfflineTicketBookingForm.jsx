@@ -658,6 +658,7 @@ const QrScanner = ({ onScanSuccess, onClose }) => {
   const [copied, setCopied] = useState(false);
   const scannerRef = useRef(null);
   const qrReaderRef = useRef(null);
+  const {user}=useAuth();
 
   const startScanner = () => {
     setCameraStarted(true);
@@ -811,7 +812,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
       const exists = prev.find((s) => s._id === show._id);
       const newShows = exists
         ? prev.filter((s) => s._id !== show._id)
-        : [...prev, { ...show, ticket_count: 1 }];
+        : [...prev, { _id: show._id, title: show.title, price: show.price, ticket_count: 1 }];
       console.log("Updated selectedShows:", newShows);
       return newShows;
     });
@@ -862,7 +863,9 @@ const OfflineTicketBookingForm = ({ shows }) => {
       }
       const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/by-qrcode/${scannedId}`);
       const userData = response.data.data;
-
+   
+      console.log(userData,"userdat");
+      
       if (userData && userData._id) {
         setUserId(userData._id);
         setUserInfo({
@@ -921,84 +924,120 @@ const OfflineTicketBookingForm = ({ shows }) => {
     }
   };
 
-  const handleSubmit = async () => {
-    console.log("handleSubmit called with:", { userId, userInfo, selectedShows, paymentMethod });
+  // const handleUpdate = async (method, userId) => {
+  //   if (!userInfo.name || !userInfo.phone || selectedShows.length === 0 || !method) {
+  //     toast.error("Please fill all required fields, select at least one show, and choose a payment method.");
+  //     return;
+  //   }
 
-    if (!userInfo.name || !userInfo.phone) {
-      toast.error("Please fill all required fields (name and phone).");
-      return;
-    }
+  //   setLoading(true);
 
-    if (!userId) {
-      toast.error("Please scan a QR code to load user data.");
-      return;
-    }
+  //   try {
+  //     // Sanitize selectedShows to ensure no circular references
+  //     const sanitizedShows = selectedShows.map((s) => ({
+  //       _id: s._id,
+  //       ticket_count: s.ticket_count,
+  //       price: s.price,
+  //     }));
 
-    if (selectedShows.length === 0) {
-      toast.error("No shows selected. Please select at least one show.");
-      return;
-    }
+  //     // Prepare payload for user and tickets
+  //     const updatePayload = {
+  //       userInfo: { ...userInfo }, // name, phone, notes
+  //       tickets: sanitizedShows.map((s) => ({
+  //         show_id: s._id,
+  //         ticket_count: s.ticket_count,
+  //         amount: calculateAmount(s.price, s.ticket_count),
+  //         payment_method: method,
+  //         created_by: user._id,
+  //       })),
+  //     };
 
-    const invalidTicketCount = selectedShows.some(
-      (s) => !s.ticket_count || s.ticket_count < 1
+  //     // Call the update API
+  //     const response = await axios.put(
+  //       `${import.meta.env.VITE_BASE_URL}/users/update-user/${userId}`,
+  //       updatePayload
+  //     );
+
+  //     toast.success("User and tickets updated successfully!");
+  //     // Reset form after success
+  //     setUserInfo({ name: "", phone: "", notes: "" });
+  //     setSelectedShows([]);
+  //     setPaymentMethod("");
+  //     setUserId(null);
+  //   } catch (err) {
+  //     const errorMessage =
+  //       err.response?.data?.message || err.message || "Something went wrong";
+  //     console.error("Update error:", errorMessage);
+  //     toast.error(errorMessage);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+ const handleUpdate = async (method, userId) => {
+  if (!userInfo.name || !userInfo.phone || selectedShows.length === 0 || !method) {
+    toast.error("Please fill all required fields, select at least one show, and choose a payment method.");
+    return;
+  }
+
+  if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+    toast.error("A valid user ID is required. Please select an existing user.");
+    return;
+  }
+
+  if (!user?._id || !/^[0-9a-fA-F]{24}$/.test(user._id)) {
+    toast.error("Invalid or missing admin ID. Please log in as an admin.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Sanitize selectedShows
+    const sanitizedShows = selectedShows.map((s) => ({
+      _id: s._id,
+      ticket_count: s.ticket_count,
+      price: s.price,
+    }));
+
+    // Prepare payload
+    const updatePayload = {
+      userInfo: { ...userInfo },
+      tickets: sanitizedShows.map((s) => ({
+        show_id: s._id,
+        ticket_count: s.ticket_count,
+        amount: calculateAmount(s.price, s.ticket_count),
+        payment_method: method,
+        created_by: user._id,
+      })),
+    };
+
+    console.log("Sending update request with userId:", userId);
+    console.log("Update payload:", updatePayload);
+
+    // Call the update API
+    const response = await axios.put(
+      `${import.meta.env.VITE_BASE_URL}/users/update-user/${userId}`,
+      updatePayload
     );
-    if (invalidTicketCount) {
-      toast.error("Please enter a valid ticket count for all selected shows.");
-      return;
-    }
 
-    setLoading(true);
-
-    try {
-      // Prepare ticket data
-      const tickets = selectedShows.map((show) => {
-        if (typeof show._id !== "string") {
-          throw new Error(`Invalid show_id format for show: ${show.title}`);
-        }
-        return {
-          show_id: show._id,
-          ticket_count: show.ticket_count,
-          amount: calculateAmount(show.price, show.ticket_count).toFixed(2),
-          payment_method: paymentMethod,
-        };
-      });
-
-      if (tickets.length === 0) {
-        throw new Error("Tickets array is empty after mapping.");
-      }
-
-      const payload = { user_id: userId, user_info: userInfo, tickets };
-      console.log("Submitting payload:", payload);
-
-      const url = `${import.meta.env.VITE_BASE_URL}/tickets/update-ticket`;
-      console.log("Sending request to:", url);
-
-      const response = await axios.post(url, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Failed to update tickets");
-      }
-
-      toast.success("Tickets updated successfully!");
-
-      // Reset form
-      setUserInfo({ name: "", phone: "", notes: "" });
-      setUserId(null);
-      setExistingTickets([]);
-      setSelectedShows([]);
-      setPaymentMethod("GPay");
-    } catch (err) {
-      console.error("Axios error:", err);
-      const errorMessage =
-        err.response?.data?.message || err.message || "Failed to update tickets";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    toast.success("User and tickets updated successfully!");
+    // Reset form
+    setUserInfo({ name: "", phone: "", notes: "" });
+    setSelectedShows([]);
+    setPaymentMethod("");
+    setUserId(null);
+    if (onClose) onClose();
+  } catch (err) {
+    const errorMessage =
+      err.response?.data?.message || err.message || "Something went wrong";
+    console.error("Update error:", errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
   console.log("Render selectedShows:", selectedShows);
 
   return (
@@ -1156,7 +1195,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
 
       <div className="flex gap-4 flex-wrap">
         <Button
-          onClick={handleSubmit}
+          onClick={() => handleUpdate(paymentMethod, userId)} // Pass paymentMethod and userId explicitly
           variant="default"
           className="flex items-center gap-2 cursor-pointer"
           disabled={loading || !userId || selectedShows.length === 0}
@@ -1179,7 +1218,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
               <path
                 className="opacity-75"
                 fill="currentColor"
-                d="M4 12a8 8 0 018-8v8z"
+                d="evenodd"
               ></path>
             </svg>
           )}

@@ -394,7 +394,7 @@ ${foodCourtLink}
       ) : (
         <>
           <div className="w-full overflow-x-auto">
-            <Table className="min-w-[1000px]">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>

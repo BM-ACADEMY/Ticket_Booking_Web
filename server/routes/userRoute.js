@@ -20,7 +20,7 @@ router.get("/fetch-all-user-by/:id", userController.getUserById);
 router.post("/create-user", userController.createUser);
 
 // Update user
-router.put("/update-user/:id", userController.updateUser);
+router.put("/update-user/:userId", userController.updateUser);
 
 // Delete user
 router.delete("/delete-user/:id", userController.deleteUser);
