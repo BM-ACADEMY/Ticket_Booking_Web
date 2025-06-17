@@ -12,6 +12,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import QRCodeUserView from "./module/pages/qrcode/QRcodeUserView";
 import AttendanceMark from "./module/pages/qrcode/Attendancemark";
+import VerifyOtpForm from "./module/pages/VerifyOtpForm";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/shows/edit/:id" element={<Events />} />
           <Route path="/qrcode/:qrcode" element={<QRCodeUserView />} />
           <Route path="/attendance-mark/:user_id/:show_id" element={<AttendanceMark />} />
+          <Route path="/verify-otp" element={<VerifyOtpForm/>}/>
 
           {/* Private Routes */}
           <Route element={<PrivateRoute />}>

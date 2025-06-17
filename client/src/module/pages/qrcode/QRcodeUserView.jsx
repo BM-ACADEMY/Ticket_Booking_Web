@@ -86,50 +86,72 @@ const UserViewPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-800">
-      {/* Hero Section (Unchanged) */}
+
       <header className="relative bg-white p-4">
-        <div className="relative">
-          <motion.img
-            src={logo2}
-            alt="Top Right Logo"
-            className="absolute bg-black p-2 rounded-2xl top-0 right-0 w-16 h-16 object-contain"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          />
-        </div>
-        <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <motion.img
-            src={logo1}
-            alt="Center Logo"
-            className="w-full max-w-xs h-auto object-contain"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          />
-          <motion.h1
-            className="text-4xl md:text-7xl text-[#030049] font-bold text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0 }}
-          >
-            PEGASUS 2K25
-          </motion.h1>
+        <div className="container mx-auto">
+          {/* Top section: Logo and Text on Left */}
+          <div className="flex items-center bg-[#030049] rounded-sm justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <motion.img
+                src={logo2}
+                alt="CMC Vellore Logo"
+                className=" p-2 rounded-2xl w-20 h-20 object-contain"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              />
+              <motion.div
+                className="flex flex-col"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              >
+                <span className="text-3xl md:text-3xl font-bold text-white">
+                  CMC Vellore
+                </span>
+                <span className="text-lg md:text-sm text-white">
+                  Celebrating 125 Years
+                </span>
+              </motion.div>
+            </div>
+          </div>
+          {/* Center section: Main Logo and Heading */}
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <motion.img
+              src={logo1}
+              alt="Center Logo"
+              className="w-full max-w-xs h-auto object-contain"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            />
+            <motion.h1
+              className="text-4xl md:text-7xl font-bold text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0 }}
+            >
+              PEGASUS 2K25
+            </motion.h1>
+          </div>
         </div>
       </header>
 
+
+
+
       {/* Sponsors Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-[#030049]">
         <motion.h2
           className="text-center text-3xl md:text-4xl font-bold mb-8 flex items-center justify-center gap-2"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Star className="w-6 h-6 text-yellow-500" /> Sponsors
+          <Star className="w-6 h-6 text-yellow-500" /> <span className="text-white font-bold">Sponsors</span>
         </motion.h2>
         <ScrollArea className="w-full">
-          <div className="grid grid-cols-1 md:flex md:flex-row gap-6 px-6">
+          <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
             {brands?.map((sponsor, i) => (
               <motion.div
                 key={i}
@@ -142,10 +164,10 @@ const UserViewPage = () => {
                 <img
                   src={sponsor.show_logo || sponsor.brandLogo}
                   alt={sponsor.brandName}
-                  className="w-32 h-32 object-contain rounded-lg border border-gray-200"
+                  className="w-40 h-40 object-contain rounded-lg border border-gray-200"
                 />
-              
-                <p className="text-sm font-medium text-center">{sponsor.brandName}</p>
+
+                <p className="text-sm  font-bold text-center">{sponsor.brandName}</p>
               </motion.div>
             ))}
           </div>
@@ -154,17 +176,17 @@ const UserViewPage = () => {
       </section>
 
       {/* Associates Brand Section */}
-      <section className="py-12 bg-gradient-to-r from-gray-50 to-blue-50">
+      <section className="py-12 bg-[#1a1a6f]">
         <motion.h2
           className="text-center text-3xl md:text-4xl font-bold mb-8 flex items-center justify-center gap-2"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Handshake className="w-6 h-6 text-blue-500" /> Associates Brand
+          <Handshake className="w-6 h-6 text-blue-500" /> <span className="text-white font-bold">Associates Brand</span>
         </motion.h2>
         <ScrollArea className="w-full">
-          <div className="grid grid-cols-1 md:flex md:flex-row gap-6 px-6">
+          <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
             {associateBrands?.map((associate, i) => (
               <motion.div
                 key={i}
@@ -177,9 +199,9 @@ const UserViewPage = () => {
                 <img
                   src={associate.associateLogo || associate.associateLogo}
                   alt={associate.associateName}
-                  className="w-32 h-32 object-contain rounded-lg border border-gray-200"
+                  className="w-40 h-40 object-contain rounded-lg border border-gray-200"
                 />
-           
+
                 <p className="text-sm font-medium text-center">{associate.associateName}</p>
               </motion.div>
             ))}
@@ -189,17 +211,17 @@ const UserViewPage = () => {
       </section>
 
       {/* Event Brands Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-[#5c5cf0]">
         <motion.h2
           className="text-center text-3xl md:text-4xl font-bold mb-8 flex items-center justify-center gap-2"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Sparkles className="w-6 h-6 text-purple-500" /> Event Brands
+          <Sparkles className="w-6 h-6" /> <span className="text-white font-bold">Event Brands</span>
         </motion.h2>
         <ScrollArea className="w-full">
-          <div className="grid grid-cols-1 md:flex md:flex-row gap-6 px-6">
+          <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
             {eventBrands?.map((event, i) => (
               <motion.div
                 key={i}
@@ -214,7 +236,7 @@ const UserViewPage = () => {
                   alt={event.eventBrandName}
                   className="w-36 h-36 object-contain rounded-lg border border-gray-200"
                 />
-             
+
                 <p className="text-sm font-medium text-center">{event.eventBrandName}</p>
               </motion.div>
             ))}
@@ -224,7 +246,7 @@ const UserViewPage = () => {
       </section>
 
       {/* User Info and Tickets Section */}
-       <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
         {/* User Info Card (Unchanged) */}
         <motion.div
           initial={{ x: -50, opacity: 0 }}
@@ -240,6 +262,17 @@ const UserViewPage = () => {
               <p><strong>Phone:</strong> {userData.phone}</p>
               <p><strong>Notes:</strong> {userData.notes || "N/A"}</p>
               <p><strong>QR ID:</strong> {userData.qr_id?.length > 10 ? `${userData.qr_id.slice(0, 10)}...` : userData.qr_id}</p>
+              <p>
+                <strong>Created At:</strong>{" "}
+                {userData.created_at ? new Date(userData.created_at).toLocaleString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) : "N/A"}
+              </p>
+
             </div>
           </Card>
         </motion.div>
