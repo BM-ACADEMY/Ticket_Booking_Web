@@ -10,7 +10,7 @@ router.get('/count/:user_id/:show_id', ticketController.getTicketCount);
 router.get('/fetch-all-ticket', ticketController.getAllTickets);
 
 // Get single ticket by ID
-router.get('/:id', ticketController.getTicketById);
+router.get('/get-by-id/:id', ticketController.getTicketById);
 
 // Update ticket by ID
 router.put('/update-ticket/:id', ticketController.updateTicket);

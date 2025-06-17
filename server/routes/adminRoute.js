@@ -28,7 +28,7 @@ router.get("/fetch-all-subAdmins",verifyAdminToken ,adminController.getAllSubAdm
 router.get("/fetch-all-checkers",verifyAdminToken ,adminController.getAllCheckers);
 
 // GET admin by id
-router.get("/:id", verifyAdminToken,adminController.getAdminById);
+router.get("/fetch-admin-sub-by-id/:id", verifyAdminToken,adminController.getAdminById);
 
 // POST create admin
 router.post("/create-admin-and-subAdmin", adminController.createAdmin);
