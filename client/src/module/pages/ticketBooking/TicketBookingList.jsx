@@ -90,38 +90,81 @@ const TicketList = () => {
     }
   };
 
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page,
-        limit: 10,
-        name: nameFilter.trim(),
-        createdBy:
-          user && user.role_id !== "1"
-            ? user._id
-            : createdBy !== "none"
-            ? createdBy
-            : "",
-        createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
-      };
-      console.log("Fetching tickets with params:", params);
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
-        { params, withCredentials: true }
-      );
-      console.log("API response:", res.data);
-      setTickets(res.data.data || []);
-      setTotalPages(res.data.pagination?.totalPages || 1);
-    } catch (error) {
-      console.error("Fetch error:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to fetch tickets");
-      setTickets([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, nameFilter, dateTime.date, filter, createdBy, user]);
+  // const fetchTickets = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const params = {
+  //       page,
+  //       limit: 10,
+  //       name: nameFilter.trim(),
+  //       createdBy:
+  //         user && user.role_id !== "1"
+  //           ? user._id
+  //           : createdBy !== "none"
+  //           ? createdBy
+  //           : "",
+  //       createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
+  //     };
+  //     console.log("Fetching tickets with params:", params);
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
+  //       { params, withCredentials: true }
+  //     );
+  //     console.log("API response:", res.data);
+  //     setTickets(res.data.data || []);
+  //     setTotalPages(res.data.pagination?.totalPages || 1);
+  //   } catch (error) {
+  //     console.error("Fetch error:", error.response?.data || error.message);
+  //     toast.error(error.response?.data?.message || "Failed to fetch tickets");
+  //     setTickets([]);
+  //     setTotalPages(1);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [page, nameFilter, dateTime.date, filter, createdBy, user]);
+
+const fetchTickets = useCallback(async () => {
+  setLoading(true);
+  try {
+    const params = {
+      page,
+      limit: 10,
+      name: nameFilter.trim(), // ✅ make sure this is a controlled input
+      createdBy:
+        user && user.role_id !== "1"
+          ? user._id
+          : createdBy !== "none"
+          ? createdBy
+          : "",
+      createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
+      // Optional: if you add sort to backend
+      sortBy: "created_at",
+      sortOrder: "desc",
+    };
+
+    console.log("Fetching tickets with params:", params);
+
+    const res = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
+      {
+        params,
+        withCredentials: true,
+      }
+    );
+
+    console.log("API response:", res.data);
+    setTickets(res.data.data || []);
+    setTotalPages(res.data.pagination?.totalPages || 1);
+  } catch (error) {
+    console.error("Fetch error:", error.response?.data || error.message);
+    toast.error(error.response?.data?.message || "Failed to fetch tickets");
+    setTickets([]);
+    setTotalPages(1);
+  } finally {
+    setLoading(false);
+  }
+}, [page, nameFilter, dateTime.date, createdBy, user]);
+
 
   const debouncedFetchTickets = useCallback(debounce(fetchTickets, 500), [
     fetchTickets,

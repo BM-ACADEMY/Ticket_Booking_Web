@@ -224,66 +224,252 @@ exports.createUser = async (req, res) => {
 
 
 
+// exports.getUserTicketShowDetails = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, filter = "all", createdBy, createdAt } = req.query;
+//     const pageNum = Number(page);
+//     const limitNum = Number(limit);
+//     const skip = (pageNum - 1) * limitNum;
+
+//     // Validate parameters
+//     if (pageNum < 1 || limitNum < 1) {
+//       return res.status(400).json({ success: false, message: "Invalid page or limit" });
+//     }
+//     if (!["all", "today", "week", "month"].includes(filter)) {
+//       return res.status(400).json({ success: false, message: "Invalid filter value" });
+//     }
+//     if (createdBy && !mongoose.isValidObjectId(createdBy)) {
+//       return res.status(400).json({ success: false, message: "Invalid createdBy ID" });
+//     }
+
+//     let matchDate = {};
+
+//     // Apply createdAt filter
+//     if (createdAt) {
+//       const start = new Date(createdAt);
+//       start.setHours(0, 0, 0, 0);
+//       const end = new Date(createdAt);
+//       end.setHours(23, 59, 59, 999);
+//       matchDate.created_at = { $gte: start, $lte: end };
+//     } else if (filter === "today") {
+//       const now = new Date();
+//       const start = new Date(now.setHours(0, 0, 0, 0));
+//       const end = new Date(now.setHours(23, 59, 59, 999));
+//       matchDate.created_at = { $gte: start, $lte: end };
+//     } else if (filter === "week") {
+//       const startOfWeek = new Date();
+//       startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+//       startOfWeek.setHours(0, 0, 0, 0);
+//       matchDate.created_at = { $gte: startOfWeek };
+//     } else if (filter === "month") {
+//       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+//       matchDate.created_at = { $gte: startOfMonth };
+//     }
+
+//     // Check createdBy role
+//     let applyCreatedByFilter = false;
+//     if (createdBy) {
+//       const creator = await Admin.findById({_id:createdBy}, { role_id: 1 });
+//       if (!creator) {
+//         return res.status(404).json({ success: false, message: "Creator not found" });
+//       }
+//       if (creator.role_id !== "1") { // SubAdmin or Checker
+//         applyCreatedByFilter = true;
+//       }
+//     }
+
+//     // Apply createdBy filter if needed
+//     if (applyCreatedByFilter) {
+//       matchDate.created_by = new mongoose.Types.ObjectId(createdBy);
+//     }
+
+//     // Aggregation pipeline
+//     const pipeline = [
+//       { $match: matchDate },
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "user_id",
+//           foreignField: "_id",
+//           as: "user",
+//         },
+//       },
+//       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "shows",
+//           localField: "show_id",
+//           foreignField: "_id",
+//           as: "show",
+//         },
+//       },
+//       { $unwind: { path: "$show", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "admins",
+//           localField: "created_by",
+//           foreignField: "_id",
+//           as: "creator",
+//         },
+//       },
+//       { $unwind: { path: "$creator", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "roles",
+//           localField: "creator.role_id",
+//           foreignField: "role_id",
+//           as: "role",
+//         },
+//       },
+//       { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+//       {
+//         $set: {
+//           created_by_details: {
+//             id: "$creator._id",
+//             name: "$creator.name",
+//             email: "$creator.email",
+//             role: {
+//               $switch: {
+//                 branches: [
+//                   { case: { $eq: ["$creator.role_id", "1"] }, then: "admin" },
+//                   { case: { $eq: ["$creator.role_id", "2"] }, then: "subadmin" },
+//                   { case: { $eq: ["$creator.role_id", "3"] }, then: "checker" },
+//                 ],
+//                 default: "unknown",
+//               },
+//             },
+//             role_id: "$creator.role_id",
+//             role_name: "$role.name",
+//           },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$user._id",
+//           name: { $first: "$user.name" },
+//           email: { $first: "$user.email" },
+//           phone: { $first: "$user.phone" },
+//           notes: { $first: "$user.notes" },
+//           is_offline: { $first: "$user.is_offline" },
+//           qr_id: { $first: "$user.qr_id" },
+//           created_at: { $first: "$user.created_at" },
+//           shows: {
+//             $push: {
+//               ticket_id: "$_id",
+//               show_id: "$show._id",
+//               show_title: "$show.title",
+//               show_logo: "$show.logo",
+//               location: "$show.location",
+//               datetime: "$show.datetime",
+//               ticket_count: "$ticket_count",
+//               qr_code_link: "$qr_code_link",
+//               amount: { $toDouble: "$amount" },
+//               payment_method: "$payment_method",
+//               created_by: "$created_by_details",
+//             },
+//           },
+//         },
+//       },
+//       { $sort: { name: 1 } },
+//       {
+//         $facet: {
+//           data: [{ $skip: skip }, { $limit: limitNum }],
+//           metadata: [{ $count: "total" }],
+//         },
+//       },
+//     ];
+
+//     const [result] = await Ticket.aggregate(pipeline);
+//     const data = result.data || [];
+//     const total = result.metadata[0]?.total || 0;
+//     const totalPages = Math.ceil(total / limitNum);
+
+//     res.status(200).json({
+//       success: true,
+//       data,
+//       pagination: {
+//         total,
+//         page: pageNum,
+//         limit: limitNum,
+//         totalPages,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in getUserTicketShowDetails:", error);
+//     if (error.name === "CastError") {
+//       return res.status(400).json({ success: false, message: "Invalid ID format" });
+//     }
+//     res.status(500).json({ success: false, message: "Server error", error: error.message });
+//   }
+// };
+
 exports.getUserTicketShowDetails = async (req, res) => {
   try {
-    const { page = 1, limit = 10, filter = "", createdBy, createdAt } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      filter = "all",
+      createdBy,
+      createdAt,
+      name = ""
+    } = req.query;
+
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Validate parameters
     if (pageNum < 1 || limitNum < 1) {
       return res.status(400).json({ success: false, message: "Invalid page or limit" });
     }
-    // if (!["all", "today", "week", "month"].includes(filter)) {
-    //   return res.status(400).json({ success: false, message: "Invalid filter value" });
-    // }
+
+    if (!["all", "today", "week", "month"].includes(filter)) {
+      return res.status(400).json({ success: false, message: "Invalid filter value" });
+    }
+
     if (createdBy && !mongoose.isValidObjectId(createdBy)) {
       return res.status(400).json({ success: false, message: "Invalid createdBy ID" });
     }
 
     let matchDate = {};
 
-    // Apply createdAt filter
-    // if (createdAt) {
-    //   const start = new Date(createdAt);
-    //   start.setHours(0, 0, 0, 0);
-    //   const end = new Date(createdAt);
-    //   end.setHours(23, 59, 59, 999);
-    //   matchDate.created_at = { $gte: start, $lte: end };
-    // } else if (filter === "today") {
-    //   const now = new Date();
-    //   const start = new Date(now.setHours(0, 0, 0, 0));
-    //   const end = new Date(now.setHours(23, 59, 59, 999));
-    //   matchDate.created_at = { $gte: start, $lte: end };
-    // } else if (filter === "week") {
-    //   const startOfWeek = new Date();
-    //   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    //   startOfWeek.setHours(0, 0, 0, 0);
-    //   matchDate.created_at = { $gte: startOfWeek };
-    // } else if (filter === "month") {
-    //   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    //   matchDate.created_at = { $gte: startOfMonth };
-    // }
+    // Filter by date or time range
+    if (createdAt) {
+      const start = new Date(createdAt);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(createdAt);
+      end.setHours(23, 59, 59, 999);
+      matchDate.created_at = { $gte: start, $lte: end };
+    } else if (filter === "today") {
+      const now = new Date();
+      const start = new Date(now.setHours(0, 0, 0, 0));
+      const end = new Date(now.setHours(23, 59, 59, 999));
+      matchDate.created_at = { $gte: start, $lte: end };
+    } else if (filter === "week") {
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      matchDate.created_at = { $gte: startOfWeek };
+    } else if (filter === "month") {
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      matchDate.created_at = { $gte: startOfMonth };
+    }
 
     // Check createdBy role
     let applyCreatedByFilter = false;
     if (createdBy) {
-      const creator = await Admin.findById({_id:createdBy}, { role_id: 1 });
+      const creator = await Admin.findById({ _id: createdBy }, { role_id: 1 });
       if (!creator) {
         return res.status(404).json({ success: false, message: "Creator not found" });
       }
-      if (creator.role_id !== "1") { // SubAdmin or Checker
+      if (creator.role_id !== "1") {
         applyCreatedByFilter = true;
       }
     }
 
-    // Apply createdBy filter if needed
     if (applyCreatedByFilter) {
       matchDate.created_by = new mongoose.Types.ObjectId(createdBy);
     }
 
-    // Aggregation pipeline
     const pipeline = [
       { $match: matchDate },
       {
@@ -295,6 +481,14 @@ exports.getUserTicketShowDetails = async (req, res) => {
         },
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 🔍 Name filter here
+      {
+        $match: name.trim()
+          ? { "user.name": { $regex: name.trim(), $options: "i" } }
+          : {},
+      },
+
       {
         $lookup: {
           from: "shows",
@@ -343,6 +537,10 @@ exports.getUserTicketShowDetails = async (req, res) => {
           },
         },
       },
+
+      // 🧭 Sort by ticket created_at DESC before grouping
+      { $sort: { created_at: -1 } },
+
       {
         $group: {
           _id: "$user._id",
@@ -370,7 +568,10 @@ exports.getUserTicketShowDetails = async (req, res) => {
           },
         },
       },
-      { $sort: { name: 1 } },
+
+      // Optional: Sort users by name ASC (or created_at if preferred)
+      { $sort: { created_at: -1 } },
+
       {
         $facet: {
           data: [{ $skip: skip }, { $limit: limitNum }],
@@ -402,7 +603,6 @@ exports.getUserTicketShowDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 
 exports.getAdminsAndSubAdmins = async (req, res) => {
