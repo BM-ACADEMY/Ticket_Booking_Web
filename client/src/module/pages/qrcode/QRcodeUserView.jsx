@@ -83,6 +83,9 @@ const UserViewPage = () => {
   if (!userData) {
     return <p className="text-center mt-10">Loading user info...</p>;
   }
+  // const handleAttendance=(show_id)=>{
+  //   navigate(`/attendance-mark/${userData._id}/${show_id}`)
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-800">
@@ -148,7 +151,7 @@ const UserViewPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Star className="w-6 h-6 text-yellow-500" /> <span className="text-white font-bold">Sponsors</span>
+          <Star className="w-6 h-6 text-yellow-500" /> <span className="text-white font-bold">Chief Sponsor</span>
         </motion.h2>
         <ScrollArea className="w-full">
           <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
@@ -183,7 +186,7 @@ const UserViewPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Handshake className="w-6 h-6 text-blue-500" /> <span className="text-white font-bold">Associates Brand</span>
+          <Handshake className="w-6 h-6 text-blue-500" /> <span className="text-white font-bold">Associate Sponsor</span>
         </motion.h2>
         <ScrollArea className="w-full">
           <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
@@ -218,7 +221,7 @@ const UserViewPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Sparkles className="w-6 h-6" /> <span className="text-white font-bold">Event Brands</span>
+          <Sparkles className="w-6 h-6" /> <span className="text-white font-bold">Event Sponsor</span>
         </motion.h2>
         <ScrollArea className="w-full">
           <div className="grid grid-cols-1 md:flex md:flex-row justify-center gap-6 px-6">
@@ -332,7 +335,7 @@ const UserViewPage = () => {
                           className="mx-auto"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-2" >
                         Tap QR to mark attendance
                       </p>
                     </div>
@@ -474,7 +477,7 @@ const UserViewPage = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
             >
               <Copyright className="w-4 h-4" />
-              <span>bmtechx.in, {new Date().getFullYear()}</span>
+              <a href="https://bmtechx.in" style={{textDecorationStyle:'double',textDecoration:"underline"}} target="_blank">BM TECHx {new Date().getFullYear()}</a>
             </motion.div>
           </div>
         </motion.div>

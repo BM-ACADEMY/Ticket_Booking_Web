@@ -123,47 +123,47 @@ const TicketList = () => {
   //   }
   // }, [page, nameFilter, dateTime.date, filter, createdBy, user]);
 
-const fetchTickets = useCallback(async () => {
-  setLoading(true);
-  try {
-    const params = {
-      page,
-      limit: 10,
-      name: nameFilter.trim(), // ✅ make sure this is a controlled input
-      createdBy:
-        user && user.role_id !== "1"
-          ? user._id
-          : createdBy !== "none"
-          ? createdBy
-          : "",
-      createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
-      // Optional: if you add sort to backend
-      sortBy: "created_at",
-      sortOrder: "desc",
-    };
+  const fetchTickets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit: 10,
+        name: nameFilter.trim(), // ✅ make sure this is a controlled input
+        createdBy:
+          user && user.role_id !== "1"
+            ? user._id
+            : createdBy !== "none"
+              ? createdBy
+              : "",
+        createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
+        // Optional: if you add sort to backend
+        sortBy: "created_at",
+        sortOrder: "desc",
+      };
 
-    console.log("Fetching tickets with params:", params);
+      console.log("Fetching tickets with params:", params);
 
-    const res = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
-      {
-        params,
-        withCredentials: true,
-      }
-    );
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
+        {
+          params,
+          withCredentials: true,
+        }
+      );
 
-    console.log("API response:", res.data);
-    setTickets(res.data.data || []);
-    setTotalPages(res.data.pagination?.totalPages || 1);
-  } catch (error) {
-    console.error("Fetch error:", error.response?.data || error.message);
-    toast.error(error.response?.data?.message || "Failed to fetch tickets");
-    setTickets([]);
-    setTotalPages(1);
-  } finally {
-    setLoading(false);
-  }
-}, [page, nameFilter, dateTime.date, createdBy, user]);
+      console.log("API response:", res.data);
+      setTickets(res.data.data || []);
+      setTotalPages(res.data.pagination?.totalPages || 1);
+    } catch (error) {
+      console.error("Fetch error:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to fetch tickets");
+      setTickets([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, nameFilter, dateTime.date, createdBy, user]);
 
 
   const debouncedFetchTickets = useCallback(debounce(fetchTickets, 500), [
@@ -203,7 +203,7 @@ const fetchTickets = useCallback(async () => {
 
     const message = `
 Hi ${item.name},
-🌟 Welcome to Pegasus 2k25 – the crown jewel of CMC!
+😊 Welcome to Pegasus 2k25 – the crown jewel of CMC!
 
 You have successfully booked ${show.ticket_count} ticket(s) for ${show.show_title}, scheduled on ${formattedShowDate} at ${show.location}.
 
@@ -282,11 +282,11 @@ ${foodCourtLink}
           prevTickets.map((ticket) =>
             ticket._id === ticketToDelete.item._id
               ? {
-                  ...ticket,
-                  shows: ticket.shows.filter(
-                    (show) => show.ticket_id !== ticketToDelete.ticket_id
-                  ),
-                }
+                ...ticket,
+                shows: ticket.shows.filter(
+                  (show) => show.ticket_id !== ticketToDelete.ticket_id
+                ),
+              }
               : ticket
           ).filter((ticket) => ticket.shows.length > 0)
         );
@@ -336,7 +336,7 @@ ${foodCourtLink}
             setTime={(time) => setDateTime((prev) => ({ ...prev, time }))}
           />
         </div>
-        <Select value={filter} onValueChange={setFilter}>
+        {/* <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Select filter" />
           </SelectTrigger>
@@ -347,8 +347,8 @@ ${foodCourtLink}
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
-        {user && user.role_id === "1" && (
+        </Select> */}
+        {/* {user && user.role_id === "1" && (
           <Select value={createdBy} onValueChange={setCreatedBy}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All Creators" />
@@ -363,7 +363,7 @@ ${foodCourtLink}
               ))}
             </SelectContent>
           </Select>
-        )}
+        )} */}
         <Button variant="outline" onClick={handleResetFilters}>
           Reset Filters
         </Button>
@@ -412,42 +412,40 @@ ${foodCourtLink}
               <TableBody>
                 {tickets.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={10} className="text-center text-muted-foreground">
                       No tickets found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  tickets.map((item) =>
-                    item.shows.map((show, index) => (
+                  tickets.map((item) => {
+                    const show = item.shows[0]; // only first show
+                    return (
                       <TableRow key={`${item._id}-${show.ticket_id}`}>
                         <TableCell>{item.name || "N/A"}</TableCell>
                         <TableCell>{item.phone || "N/A"}</TableCell>
                         <TableCell>{item.notes || "N/A"}</TableCell>
                         <TableCell className="flex items-center gap-2">
-                          {show.show_logo && (
+                          {show?.show_logo && (
                             <img
                               src={show.show_logo}
                               alt="Logo"
                               className="w-6 h-6 rounded-full"
                             />
                           )}
-                          {show.show_title || "N/A"}
+                          {show?.show_title || "N/A"}
                         </TableCell>
-                        <TableCell>{show.ticket_count || "N/A"}</TableCell>
+                        <TableCell>{show?.ticket_count || "N/A"}</TableCell>
                         <TableCell>
-                          ₹{parseFloat(show.amount || 0).toFixed(2)}
+                          ₹{parseFloat(show?.amount || 0).toFixed(2)}
                         </TableCell>
-                        <TableCell>{show.created_by?.name || "N/A"}</TableCell>
-                        <TableCell>{show.created_by?.role || "N/A"}</TableCell>
+                        <TableCell>{show?.created_by?.name || "N/A"}</TableCell>
+                        <TableCell>{show?.created_by?.role || "N/A"}</TableCell>
                         <TableCell>
                           {item.created_at
                             ? format(
-                                new Date(item.created_at),
-                                "dd-MMM-yyyy HH:mm:ss"
-                              )
+                              new Date(item.created_at),
+                              "dd-MMM-yyyy HH:mm:ss"
+                            )
                             : "N/A"}
                         </TableCell>
                         <TableCell className="flex gap-2">
@@ -481,10 +479,11 @@ ${foodCourtLink}
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )
+                    );
+                  })
                 )}
               </TableBody>
+
             </Table>
           </div>
 
@@ -642,7 +641,7 @@ ${foodCourtLink}
                     <div>
                       <p>
                         You are about to delete the ticket for{" "}
-                       {ticketToDelete?.item.name}.
+                        {ticketToDelete?.item.name}.
                       </p>
                       <p className="mt-1">
                         Show: {ticketToDelete?.show?.show_title || "N/A"}

@@ -14,7 +14,7 @@ router.get("/fetch-all-users-with-filter", userController.getUserTicketShowDetai
 router.get("/admins-subadmins", userController.getAdminsAndSubAdmins);
 
 // Get user by ID
-router.get("/fetch-all-user-by/:id", userController.getUserById);
+router.get("/fetch-all-user-by-id/:user_id", userController.getUserById);
 
 // Create user
 router.post("/create-user", userController.createUser);
