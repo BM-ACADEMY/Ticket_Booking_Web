@@ -88,47 +88,92 @@ exports.createTicket = async (req, res) => {
       { upsert: true, new: true }
     );
     // Loop through each ticket and send SMS
+    //     for (const ticket of tickets) {
+    //       try {
+    //         const show = await Show.findById(ticket.show_id);
+    //         if (!show) continue;
+
+    //         const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
+    //         const showDate = new Date(show.datetime).toLocaleString("en-IN");
+
+    //         // 🎟️ WhatsApp Message (with emojis and dynamic content)
+    //         const message = `Hi ${
+    //           user.name
+    //         } 😊, welcome to Pegasus 2k25 – the crown jewel of CMC! 👑
+
+    // 🎟️ You have successfully booked ${ticket.ticket_count} ticket(s) for *${
+    //           show.title
+    //         }*, scheduled on *${showDate}* at *${show.location}*.
+
+    // 🔗 Your e-ticket: ${viewLink}
+
+    // ⚠️ Please show the e-ticket at entry.
+
+    // 💳 Payment of ₹${parseFloat(ticket.amount)} via *${
+    //           ticket.payment_method
+    //         }* received on *${ticketDate}*.
+
+    // 🍴 To access the exclusive Pegasus Food Court all week, register here:
+    // [Food Court Link]
+
+    // 🛵 Prefer doorstep delivery? We deliver to Bagayam & Rehab campuses only!`;
+
+    //         const encodedMessage = encodeURIComponent(message); // Encode emojis, line breaks, etc.
+
+    //         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
+    //         const params = {
+    //           user: "Mohithvarshan_rcs",
+    //           pass: "123456",
+    //           sender: "BUZWAP",
+    //           phone: `91${user.phone}`, // 📱 Dynamic phone number
+    //           text: encodedMessage,
+    //           priority: "wa", // WhatsApp
+    //           stype: "normal",
+    //         };
+
+    //         const response = await axios.get(apiUrl, { params });
+    //         console.log(
+    //           `📤 WhatsApp sent for show "${show.title}" to ${user.phone}:`,
+    //           response.data
+    //         );
+    //       } catch (error) {
+    //         console.error("❌ Error sending WhatsApp message:", error.message);
+    //       }
+    //     }
+
     for (const ticket of tickets) {
-      const show = await Show.findById(ticket.show_id);
-      const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
+      try {
+        const show = await Show.findById(ticket.show_id);
+        if (!show) continue;
 
-      const message = `Hi ${
-        user.name
-      }, welcome to Pegasus 2k25! – the crown jewel of CMC!
+        // 👇 Fill the placeholders with values
+        const template1 = encodeURIComponent("Pegasus 2k25"); // {{1}} Welcome title
+        const template2 = encodeURIComponent(user.email || user.phone); // {{2}} username (whatever you're using)
+        const template3 = encodeURIComponent(
+          ticket.ticket_code || "Pegasus@123"
+        ); // {{3}} password or code
 
-You have booked ${ticket.ticket_count} ticket(s) for ${
-        show.title
-      } on ${new Date(show.datetime).toLocaleString("en-IN")} at ${
-        show.location
-      }.
-E-ticket: ${viewLink}
-Entry allowed only if you show the e-ticket from this link.
+        const finalText = `Thank%20You%20for%20registration.%20Welcome%20to%20${template1}.%20Your%20login%20details%20username:%20${template2},%20Password:%20${template3}`;
 
-Payment of ₹${parseFloat(ticket.amount)} via ${
-        ticket.payment_method
-      } received on ${ticketDate}.
+        const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
+        const params = {
+          user: "Mohithvarshan_rcs",
+          pass: "123456",
+          sender: "BUZWAP",
+          phone: `91${user.phone}`, // Must include country code
+          text: finalText,
+          priority: "wa",
+          stype: "normal",
+        };
 
-To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
-[Food Court Link]
-
-Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)`;
-
-      // await axios.post(
-      //   "https://www.fast2sms.com/dev/bulkV2",
-      //   {
-      //     route: "q",
-      //     message,
-      //     language: "english",
-      //     flash: 0,
-      //     numbers: user.phone,
-      //   },
-      //   {
-      //     headers: {
-      //       authorization: process.env.FAST2SMS_API_KEY,
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
+        const response = await axios.get(apiUrl, { params });
+        console.log(
+          `📤 WhatsApp sent using approved template to ${user.phone}:`,
+          response.data
+        );
+      } catch (error) {
+        console.error("❌ WhatsApp message failed:", error.message);
+      }
     }
 
     return res.status(201).json({
@@ -236,8 +281,6 @@ exports.getTicketById = async (req, res) => {
 //   }
 // };
 
-
-
 exports.updateTicket = async (req, res) => {
   try {
     const { user_id, tickets } = req.body;
@@ -264,7 +307,9 @@ exports.updateTicket = async (req, res) => {
     const newShowIds = tickets.map((t) => t.show_id.toString());
 
     // Delete tickets for deselected shows
-    const ticketsToDelete = existingShowIds.filter((id) => !newShowIds.includes(id));
+    const ticketsToDelete = existingShowIds.filter(
+      (id) => !newShowIds.includes(id)
+    );
     if (ticketsToDelete.length > 0) {
       await Ticket.deleteMany({
         user_id,
@@ -283,7 +328,8 @@ exports.updateTicket = async (req, res) => {
           ticket_count: ticketData.ticket_count,
           amount: ticketData.amount,
           payment_method: ticketData.payment_method,
-          created_by: ticketData.created_by || req.user?._id || "default-admin-id",
+          created_by:
+            ticketData.created_by || req.user?._id || "default-admin-id",
           qr_code_link: user.qr_id
             ? `${process.env.FRONTEND_QRCODE_URL}/${user.qr_id}`
             : null,
@@ -311,7 +357,7 @@ exports.updateTicket = async (req, res) => {
 exports.deleteTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const admin = req.admin; // From your verifyAdminToken middleware
+    const admin = req.admin; // From verifyAdminToken middleware
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -321,7 +367,7 @@ exports.deleteTicket = async (req, res) => {
       });
     }
 
-    // Find the ticket with associated show data
+    // Find the ticket
     const ticket = await Ticket.findById(id);
     if (!ticket) {
       return res.status(404).json({
@@ -330,21 +376,25 @@ exports.deleteTicket = async (req, res) => {
       });
     }
 
-    // Check permissions - only admin or ticket creator can delete
-    const isAdmin = admin.role.role_id === "1"; // Assuming "1" is admin role
+    // ✅ Check if the user is the default super admin
+    const isDefaultAdmin = admin.email === "pegasus25coupons@gmail.com";
+
+    // ✅ General role-based permissions
+    const isAdmin = admin.role?.role_id === "1"; // Admin role
     const isCreator = ticket.created_by.toString() === admin._id.toString();
 
-    if (!isAdmin && !isCreator) {
+    // ❌ If not admin, not creator, and not default admin → block
+    if (!isAdmin && !isCreator && !isDefaultAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Unauthorized - Only admin or ticket creator can delete",
+        message: "Unauthorized - Only admin, creator, or default admin can delete",
       });
     }
 
     // Delete the ticket
     const deletedTicket = await Ticket.findByIdAndDelete(id);
 
-    // Update report data if needed
+    // Update report if deleted by creator (optional logic)
     if (isCreator) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -354,7 +404,7 @@ exports.deleteTicket = async (req, res) => {
       );
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ticket deleted successfully",
       data: {
@@ -365,10 +415,11 @@ exports.deleteTicket = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete ticket error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while deleting ticket",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
+
