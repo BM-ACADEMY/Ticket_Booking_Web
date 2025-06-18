@@ -51,7 +51,7 @@ const Dashboard = () => {
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
         style={{ backgroundColor: "#030049" }}>Dashboard</h1>
-      {user?.role_id === 1 && (
+      {/* {user?.role_id === 1 && (
         <div className="mb-6 flex justify-center">
           <select
             className="border px-4 py-2 rounded text-sm"
@@ -64,7 +64,7 @@ const Dashboard = () => {
             <option value="3">Checker</option>
           </select>
         </div>
-      )}
+      )} */}
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
