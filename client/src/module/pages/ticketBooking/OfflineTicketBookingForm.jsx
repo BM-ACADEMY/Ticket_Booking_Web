@@ -813,7 +813,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
       const newShows = exists
         ? prev.filter((s) => s._id !== show._id)
         : [...prev, { _id: show._id, title: show.title, price: show.price, ticket_count: 1 }];
-      console.log("Updated selectedShows:", newShows);
+
       return newShows;
     });
   };
@@ -826,7 +826,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
             ? { ...s, ticket_count: newCount === "" ? "" : Number(newCount) }
             : s
         );
-        console.log("Updated selectedShows after ticket count change:", updatedShows);
+ 
         return updatedShows;
       });
     }
@@ -843,7 +843,6 @@ const OfflineTicketBookingForm = ({ shows }) => {
     const fetchShows = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/shows/fetch-all-shows`);
-        console.log("Fetched shows:", res.data.data);
         setAllShows(res.data.data);
       } catch (err) {
         console.error("Fetch shows error:", err);
@@ -864,7 +863,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
       const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/by-qrcode/${scannedId}`);
       const userData = response.data.data;
    
-      console.log(userData,"userdat");
+
       
       if (userData && userData._id) {
         setUserId(userData._id);
@@ -899,7 +898,7 @@ const OfflineTicketBookingForm = ({ shows }) => {
               ...prev.filter((s) => !newShows.some((ns) => ns._id === s._id)),
               ...newShows,
             ];
-            console.log("SelectedShows after QR scan:", updatedShows);
+
             return updatedShows;
           });
           setExistingTickets(userData.shows);
@@ -1013,8 +1012,6 @@ const OfflineTicketBookingForm = ({ shows }) => {
       })),
     };
 
-    console.log("Sending update request with userId:", userId);
-    console.log("Update payload:", updatePayload);
 
     // Call the update API
     const response = await axios.put(
@@ -1038,7 +1035,6 @@ const OfflineTicketBookingForm = ({ shows }) => {
     setLoading(false);
   }
 };
-  console.log("Render selectedShows:", selectedShows);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 relative">

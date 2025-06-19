@@ -22,7 +22,7 @@ const ResetPasswordForm = () => {
 
     try {
      const res= await axios.post(`${import.meta.env.VITE_BASE_URL}/admin-and-subAdmin/reset-password/${token}`, { password })
-        console.log("Response from reset password:", res);
+
         toast.success("Password updated successfully.")
       setStatus("Password updated successfully.")
       setTimeout(() => navigate("/login"), 2000)

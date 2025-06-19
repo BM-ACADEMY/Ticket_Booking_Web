@@ -45,7 +45,7 @@ useEffect(() => {
   const validRoles = ["admin", "subadmin", "checker"];
   const userRole = user?.role?.name?.toLowerCase();
 
-  console.log("User Role:", userRole);
+
 
   if (!userRole || !validRoles.includes(userRole)) {
     setIsAuthorized(false);

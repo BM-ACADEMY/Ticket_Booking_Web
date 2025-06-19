@@ -9,7 +9,6 @@ import Calendar24 from "@/components/ui/calendar24";
 
 export default function ShowForm({ initialData = null }) {
 
-    console.log("Initial Data in ShowForm:", initialData);
 
     const [formData, setFormData] = useState({
         title: initialData?.title || "",

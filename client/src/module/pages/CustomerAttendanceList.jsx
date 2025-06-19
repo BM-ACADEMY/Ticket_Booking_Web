@@ -43,7 +43,7 @@ const CustomerAttendanceList = () => {
         name: nameFilter,
         createdAt: dateTime.date ? format(dateTime.date, "yyyy-MM-dd") : "",
       };
-      console.log("Fetching attendance with params:", params); // Debug log
+
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/attendance/fetch-all-attendance`,
         {
@@ -51,7 +51,7 @@ const CustomerAttendanceList = () => {
           withCredentials: true,
         }
       );
-      console.log("API response:", res.data); // Debug log
+
       const attendanceArray = res.data.attendance || [];
       setAttendances(attendanceArray);
       setTotalPages(res.data.pagination?.totalPages || 1);

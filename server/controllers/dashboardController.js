@@ -5,14 +5,13 @@ const Show = require("../models/showModel");
 exports.getDashboardStats = async (req, res) => {
   try {
     const { filter = "month" } = req.query;
-    const admin = req.admin; // From verifyAdminToken middleware
-    const roleName = admin.role.name; // Role name from middleware
-    const adminId = admin._id; // Admin's user ID
+    const admin = req.admin;
+    const roleName = admin.role.name;
+    const adminId = admin._id;
 
     const now = new Date();
     let matchDate = {};
 
-    // Set date filter based on query parameter
     if (filter === "today") {
       const start = new Date();
       start.setHours(0, 0, 0, 0);
@@ -29,19 +28,14 @@ exports.getDashboardStats = async (req, res) => {
       matchDate = { created_at: { $gte: startOfMonth } };
     }
 
-    // Get total users and shows (same for all roles)
     const totalUsers = await User.countDocuments();
     const totalShows = await Show.countDocuments();
 
-    // Build ticket query based on role
     let ticketQuery = { ...matchDate };
-
-    // For SubAdmins and Checkers, filter tickets by their admin ID
     if (roleName === "subAdmin" || roleName === "Checker") {
-      ticketQuery.created_by = adminId; // Assuming tickets have a 'created_by' field linking to Admin ID
+      ticketQuery.created_by = adminId;
     }
 
-    // Calculate ticket stats
     const ticketStats = await Ticket.aggregate([
       { $match: ticketQuery },
       {
@@ -53,16 +47,12 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Today payment breakdown
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    let todayPaymentQuery = {
-      created_at: { $gte: todayStart, $lte: todayEnd },
-    };
-
+    let todayPaymentQuery = { created_at: { $gte: todayStart, $lte: todayEnd } };
     if (roleName === "subAdmin" || roleName === "Checker") {
       todayPaymentQuery.created_by = adminId;
     }
@@ -77,7 +67,6 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Total payment breakdown
     let totalPaymentQuery = {};
     if (roleName === "subAdmin" || roleName === "Checker") {
       totalPaymentQuery.created_by = adminId;
@@ -93,7 +82,6 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Format payment breakdowns
     const formatPayments = (stats) => {
       const methods = ["GPay", "Cash", "Mess Bill"];
       const result = {};
@@ -104,13 +92,11 @@ exports.getDashboardStats = async (req, res) => {
       return result;
     };
 
-    // Monthly data
     let monthlyDataQuery = {
       created_at: {
         $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1),
       },
     };
-
     if (roleName === "subAdmin" || roleName === "Checker") {
       monthlyDataQuery.created_by = adminId;
     }
@@ -142,16 +128,113 @@ exports.getDashboardStats = async (req, res) => {
       { $sort: { name: 1 } },
     ]);
 
-    // Prepare response
+    // ========================== Show-wise ticket stats ==========================
+
+    let showTicketQuery = {};
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      showTicketQuery.created_by = adminId;
+    }
+
+    const overallShowTicketStats = await Ticket.aggregate([
+      { $match: showTicketQuery },
+      {
+        $group: {
+          _id: "$show_id",
+          totalTickets: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "shows",
+          localField: "_id",
+          foreignField: "_id",
+          as: "show",
+        },
+      },
+      { $unwind: "$show" },
+      {
+        $project: {
+          showId: "$show._id",
+          showTitle: "$show.title", // ✅ Correct field
+          totalTickets: 1,
+        },
+      },
+    ]);
+
+    const todayShowTicketQuery = {
+      created_at: { $gte: todayStart, $lte: todayEnd },
+    };
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      todayShowTicketQuery.created_by = adminId;
+    }
+
+    const todayShowTicketStats = await Ticket.aggregate([
+      { $match: todayShowTicketQuery },
+      {
+        $group: {
+          _id: "$show_id",
+          todayTickets: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "shows",
+          localField: "_id",
+          foreignField: "_id",
+          as: "show",
+        },
+      },
+      { $unwind: "$show" },
+      {
+        $project: {
+          showId: "$show._id",
+          showTitle: "$show.title", // ✅ Correct field
+          todayTickets: 1,
+        },
+      },
+    ]);
+
+    const combineShowStats = () => {
+      const map = {};
+
+      overallShowTicketStats.forEach((item) => {
+        map[item.showId.toString()] = {
+          showId: item.showId,
+          showTitle: item.showTitle,
+          totalTickets: item.totalTickets,
+          todayTickets: 0,
+        };
+      });
+
+      todayShowTicketStats.forEach((item) => {
+        const id = item.showId.toString();
+        if (!map[id]) {
+          map[id] = {
+            showId: item.showId,
+            showTitle: item.showTitle,
+            totalTickets: 0,
+            todayTickets: item.todayTickets,
+          };
+        } else {
+          map[id].todayTickets = item.todayTickets;
+        }
+      });
+
+      return Object.values(map);
+    };
+
+    // ========================== Final Response ==========================
+
     const stats = {
       totalUsers,
       totalShows,
       totalTickets: ticketStats[0]?.totalTickets || 0,
       totalTurnover: ticketStats[0]?.totalTurnover || 0,
-      confirmedTickets: 0, // Assuming this is not yet implemented
+      confirmedTickets: 0,
       monthlyData,
       todayPayments: formatPayments(todayPaymentStats),
       totalPayments: formatPayments(totalPaymentStats),
+      showWiseStats: combineShowStats(),
     };
 
     res.status(200).json({

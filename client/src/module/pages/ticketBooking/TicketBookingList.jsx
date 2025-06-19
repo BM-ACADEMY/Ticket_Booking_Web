@@ -82,7 +82,7 @@ const TicketList = () => {
         `${import.meta.env.VITE_BASE_URL}/users/admins-subadmins`,
         { withCredentials: true }
       );
-      console.log("Creators response:", res.data);
+
       setCreators(res.data.data || []);
     } catch (error) {
       console.error("Error fetching creators:", error);
@@ -142,7 +142,6 @@ const TicketList = () => {
         sortOrder: "desc",
       };
 
-      console.log("Fetching tickets with params:", params);
 
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/users/fetch-all-users-with-filter`,
@@ -152,7 +151,7 @@ const TicketList = () => {
         }
       );
 
-      console.log("API response:", res.data);
+  
       setTickets(res.data.data || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (error) {
@@ -237,7 +236,7 @@ ${foodCourtLink}
   };
 
   const handleDeleteClick = (item, show) => {
-    console.log("Delete clicked:", { item, show, user });
+
     if (!user) {
       toast.error("You must be logged in to delete a ticket.");
       return;
@@ -252,7 +251,7 @@ ${foodCourtLink}
 
   const handleDeleteConfirm = async () => {
     if (!ticketToDelete) return;
-    console.log("Deleting ticket:", ticketToDelete.ticket_id);
+
     setLoading(true);
 
     try {
