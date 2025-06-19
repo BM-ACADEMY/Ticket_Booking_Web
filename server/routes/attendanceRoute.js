@@ -7,7 +7,7 @@ router.put('/mark-attendance', attendanceController.markAttendance); // renamed 
 router.get('/fetch-attendance-by-user-show/:user_id/:show_id', attendanceController.getAttendance); // renamed
 
 // ✅ Generic Routes After
-router.post('/', attendanceController.createAttendance);
+router.post('/create-attendance', attendanceController.createAttendance);
 router.get('/fetch-all-attendance', attendanceController.getAllAttendance);
 router.get('/:id', attendanceController.getAttendanceById);
 router.put('/update-attendance/:id', attendanceController.updateAttendance);

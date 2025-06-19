@@ -133,7 +133,6 @@ const LoginForm = ({ className, ...props }) => {
       );
       toast.success("Login successful!");
       login(response.data.admin);
-      console.log("Login successful:", response.data);
       navigate("/");
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.message === "Email not verified. OTP sent to your email.") {

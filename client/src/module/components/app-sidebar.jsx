@@ -118,7 +118,7 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
-  console.log("AppSidebar user:", user);
+
   
   const role = user?.role?.name
   // Filter navMain based on role
@@ -127,7 +127,7 @@ export function AppSidebar({ ...props }) {
       return data.navMain // Admin sees all links
     } else if (role === "Checker") {
       return data.navMain.filter((item) =>
-        ["QR Scanner", "Attendance List"].includes(item.title)
+        ["QR Scanner","Dashboard", "Attendance List"].includes(item.title)
       )
     } else if (role === "subAdmin") {
       return data.navMain.filter((item) =>

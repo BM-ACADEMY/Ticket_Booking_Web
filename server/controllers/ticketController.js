@@ -88,49 +88,117 @@ exports.createTicket = async (req, res) => {
       { upsert: true, new: true }
     );
     // Loop through each ticket and send SMS
+    //     for (const ticket of tickets) {
+    //       try {
+    //         const show = await Show.findById(ticket.show_id);
+    //         if (!show) continue;
+
+    //         const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
+    //         const showDate = new Date(show.datetime).toLocaleString("en-IN");
+
+    //         // 🎟️ WhatsApp Message (with emojis and dynamic content)
+    //         const message = `Hi ${
+    //           user.name
+    //         } 😊, welcome to Pegasus 2k25 – the crown jewel of CMC! 👑
+
+    // 🎟️ You have successfully booked ${ticket.ticket_count} ticket(s) for *${
+    //           show.title
+    //         }*, scheduled on *${showDate}* at *${show.location}*.
+
+    // 🔗 Your e-ticket: ${viewLink}
+
+    // ⚠️ Please show the e-ticket at entry.
+
+    // 💳 Payment of ₹${parseFloat(ticket.amount)} via *${
+    //           ticket.payment_method
+    //         }* received on *${ticketDate}*.
+
+    // 🍴 To access the exclusive Pegasus Food Court all week, register here:
+    // [Food Court Link]
+
+    // 🛵 Prefer doorstep delivery? We deliver to Bagayam & Rehab campuses only!`;
+
+    //         const encodedMessage = encodeURIComponent(message); // Encode emojis, line breaks, etc.
+
+    //         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
+    //         const params = {
+    //           user: "Mohithvarshan_rcs",
+    //           pass: "123456",
+    //           sender: "BUZWAP",
+    //           phone: `91${user.phone}`, // 📱 Dynamic phone number
+    //           text: encodedMessage,
+    //           priority: "wa", // WhatsApp
+    //           stype: "normal",
+    //         };
+
+    //         const response = await axios.get(apiUrl, { params });
+    //         console.log(
+    //           `📤 WhatsApp sent for show "${show.title}" to ${user.phone}:`,
+    //           response.data
+    //         );
+    //       } catch (error) {
+    //         console.error("❌ Error sending WhatsApp message:", error.message);
+    //       }
+    //     }
+
     for (const ticket of tickets) {
-      const show = await Show.findById(ticket.show_id);
-      const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
+      try {
+        const show = await Show.findById(ticket.show_id);
+        if (!show) {
+          console.warn(`⚠️ Show not found for ticket ${ticket._id}`);
+          continue;
+        }
 
-      const message = `Hi ${
-        user.name
-      }, welcome to Pegasus 2k25! – the crown jewel of CMC!
+        const template1 = encodeURIComponent("Pegasus 2k25");
+        const template2 = encodeURIComponent(user.email || user.phone);
+        const template3 = encodeURIComponent(
+          ticket.ticket_code || "Pegasus@123"
+        );
 
-You have booked ${ticket.ticket_count} ticket(s) for ${
-        show.title
-      } on ${new Date(show.datetime).toLocaleString("en-IN")} at ${
-        show.location
-      }.
-E-ticket: ${viewLink}
-Entry allowed only if you show the e-ticket from this link.
+        const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
+        const params = {
+          user: "Mohithvarshan_rcs",
+          pass: "123456",
+          sender: "BUZWAP",
+          phone: `91${user.phone}`,
+          text: "mohit_5654",
+          priority: "wa",
+          stype: "normal",
+          Params: [
+            "Pegasus 2k25",
+            user.email || user.phone,
+            ticket.ticket_code || "Pegasus@123",
+          ].join(","),
+        };
 
-Payment of ₹${parseFloat(ticket.amount)} via ${
-        ticket.payment_method
-      } received on ${ticketDate}.
+        const response = await axios.get(apiUrl, { params });
+        console.log("Response Status:", response.status);
+        console.log("Response Data:", JSON.stringify(response.data));
 
-To enjoy exclusive access to the Pegasus Food Court throughout the week, please register here:
-[Food Court Link]
-
-Craving convenience? We also offer delivery to your doorstep! (Note: Available only for Bagayam and Rehab campuses.)`;
-
-      // await axios.post(
-      //   "https://www.fast2sms.com/dev/bulkV2",
-      //   {
-      //     route: "q",
-      //     message,
-      //     language: "english",
-      //     flash: 0,
-      //     numbers: user.phone,
-      //   },
-      //   {
-      //     headers: {
-      //       authorization: process.env.FAST2SMS_API_KEY,
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
+        if (response.status === 200) {
+          if (response.data.trim() === "") {
+            console.warn(
+              `⚠️ Empty response for ${user.phone}. Check template 'mohit_5654' or API configuration.`
+            );
+          } else {
+            console.log(`📤 WhatsApp sent to ${user.phone}:`, response.data);
+          }
+        } else {
+          console.warn(
+            `⚠️ Unexpected status for ${user.phone}: ${response.status}`
+          );
+        }
+      } catch (error) {
+        console.error(
+          `❌ WhatsApp message failed for ${user.phone}:`,
+          error.response?.data || error.message
+        );
+        if (error.response) {
+          console.error("Error Response:", error.response.data);
+          console.error("Error Status:", error.response.status);
+        }
+      }
     }
-
     return res.status(201).json({
       success: true,
       message: "Ticket(s) created and SMS sent",
@@ -147,7 +215,6 @@ Craving convenience? We also offer delivery to your doorstep! (Note: Available o
 exports.getTicketCount = async (req, res) => {
   try {
     const { user_id, show_id } = req.params;
-    console.log(req.params, "params");
 
     const count = await Ticket.aggregate([
       {
@@ -236,62 +303,18 @@ exports.getTicketById = async (req, res) => {
 //   }
 // };
 
-
-
 exports.updateTicket = async (req, res) => {
   try {
-    const { user_id, tickets, user_info } = req.body;
+    const { user_id, tickets } = req.body;
 
-    // Log incoming request for debugging
-    console.log("Received updateTickets request:", {
-      user_id,
-      tickets,
-      user_info,
-      created_by: req.user?._id,
-    });
-
-    // Validate user_id
-    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+    if (!user_id || !tickets || !Array.isArray(tickets)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid user ID format",
+        message: "Invalid payload: user_id and tickets array are required",
       });
     }
 
-    // Validate tickets
-    if (!tickets || !Array.isArray(tickets) || tickets.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Tickets array is required and cannot be empty",
-      });
-    }
-
-    // Check for duplicate show_ids
-    const showIdsSet = new Set(tickets.map((t) => t.show_id));
-    if (showIdsSet.size !== tickets.length) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate show IDs found in tickets array",
-      });
-    }
-
-    // Validate each ticket
-    tickets.forEach((ticket, index) => {
-      if (!mongoose.Types.ObjectId.isValid(ticket.show_id)) {
-        throw new Error(`Invalid show ID at index ${index}: ${ticket.show_id}`);
-      }
-      if (!ticket.ticket_count || ticket.ticket_count < 1 || !Number.isInteger(ticket.ticket_count)) {
-        throw new Error(`Invalid ticket count at index ${index} for show ${ticket.show_id}`);
-      }
-      if (!ticket.amount || isNaN(parseFloat(ticket.amount)) || parseFloat(ticket.amount) <= 0) {
-        throw new Error(`Invalid amount at index ${index} for show ${ticket.show_id}`);
-      }
-      if (!["GPay", "Cash", "Mess Bill", "Provisional"].includes(ticket.payment_method)) {
-        throw new Error(`Invalid payment method at index ${index} for show ${ticket.show_id}`);
-      }
-    });
-
-    // Validate user
+    // Verify user exists
     const user = await User.findById(user_id);
     if (!user) {
       return res.status(404).json({
@@ -300,114 +323,54 @@ exports.updateTicket = async (req, res) => {
       });
     }
 
-    // Validate user_info if provided
-    if (user_info) {
-      if (typeof user_info !== "object" || !user_info.name || !user_info.phone) {
-        return res.status(400).json({
-          success: false,
-          message: "user_info must include name and phone",
-        });
-      }
-    }
+    // Get existing tickets for the user
+    const existingTickets = await Ticket.find({ user_id }).select("show_id");
+    const existingShowIds = existingTickets.map((t) => t.show_id.toString());
+    const newShowIds = tickets.map((t) => t.show_id.toString());
 
-    // Validate shows
-    const showIds = tickets.map((t) => t.show_id);
-    const shows = await Show.find({ _id: { $in: showIds } });
-    if (shows.length !== showIds.length) {
-      return res.status(404).json({
-        success: false,
-        message: "One or more shows not found",
+    // Delete tickets for deselected shows
+    const ticketsToDelete = existingShowIds.filter(
+      (id) => !newShowIds.includes(id)
+    );
+    if (ticketsToDelete.length > 0) {
+      await Ticket.deleteMany({
+        user_id,
+        show_id: { $in: ticketsToDelete },
       });
     }
 
-    // Delete existing tickets for the user
-    await mongoose.model("Ticket").deleteMany({ user_id });
-
-    // Generate or reuse QR code
-    let qr_code_link = user.qr_code_link;
-    if (!qr_code_link) {
-      const qrData = user.qr_id || user._id.toString(); // Fallback to _id if qr_id is undefined
-      const qrFileName = `qr-${user._id}-${Date.now()}.png`;
-      const qrDirPath = path.join(__dirname, "../public/qrcodes");
-
-      if (!fs.existsSync(qrDirPath)) {
-        fs.mkdirSync(qrDirPath, { recursive: true });
-      }
-
-      const qrFilePath = path.join(qrDirPath, qrFileName);
-      qr_code_link = `${process.env.FRONTEND_QRCODE_URL}/${qrData}`;
-      await QRCode.toFile(qrFilePath, qrData);
-
-      // Update user with QR code link
-      await User.findByIdAndUpdate(user_id, { qr_code_link }, { new: true });
-    }
-
-    // Create new tickets
-    const newTickets = tickets.map((ticket) => ({
-      user_id,
-      show_id: ticket.show_id,
-      ticket_count: ticket.ticket_count,
-      amount: parseFloat(ticket.amount).toFixed(2), // Normalize amount
-      payment_method: ticket.payment_method,
-      created_by: req.user._id,
-      qr_code_link,
-      created_at: new Date(),
-    }));
-
-    const savedTickets = await mongoose.model("Ticket").insertMany(newTickets);
-
-    // Prepare SMS message
-    const message = `Hi ${user.name}, welcome to Pegasus 2025!\n\nYour tickets have been updated:\n${savedTickets
-      .map(
-        (t) =>
-          `- ${shows.find((s) => s._id.toString() === t.show_id.toString()).title}: ${
-            t.ticket_count
-          } ticket(s), ₹${t.amount} via ${t.payment_method}`
-      )
-      .join("\n")}\n\nE-ticket: ${qr_code_link}\nEntry allowed only with this e-ticket.\n\nTo enjoy exclusive access to the Pegasus Food Court, please register here: [Food Court Link]\nCraving convenience? We offer delivery to Bagayam and Rehab campuses.`;
-
-    // Uncomment to enable SMS
-    /*
-    await axios.post(
-      "https://www.fast2sms.com/dev/bulkV2",
-      {
-        route: "q",
-        message,
-        language: "english",
-        flash: 0,
-        numbers: user.phone,
-      },
-      {
-        headers: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          "Content-Type": "application/json",
+    // Upsert tickets
+    const updatedTickets = [];
+    for (const ticketData of tickets) {
+      const ticket = await Ticket.findOneAndUpdate(
+        { user_id, show_id: ticketData.show_id },
+        {
+          user_id,
+          show_id: ticketData.show_id,
+          ticket_count: ticketData.ticket_count,
+          amount: ticketData.amount,
+          payment_method: ticketData.payment_method,
+          created_by:
+            ticketData.created_by || req.user?._id || "default-admin-id",
+          qr_code_link: user.qr_id
+            ? `${process.env.FRONTEND_QRCODE_URL}/${user.qr_id}`
+            : null,
         },
-      }
-    );
-    */
-
-    // Update report
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    await Report.findOneAndUpdate(
-      { admin_id: req.user._id, report_date: today },
-      {
-        $addToSet: { show_ids: { $each: showIds } },
-        $setOnInsert: { generated_at: new Date() },
-      },
-      { upsert: true, new: true }
-    );
+        { upsert: true, new: true, runValidators: true }
+      );
+      updatedTickets.push(ticket);
+    }
 
     return res.status(200).json({
       success: true,
       message: "Tickets updated successfully",
-      tickets: savedTickets,
+      data: updatedTickets,
     });
   } catch (error) {
-    console.error(`Error updating tickets for user: _id=${req.body.user_id}`, error);
+    console.error("Ticket update error:", error);
     return res.status(500).json({
       success: false,
-      message: `Failed to update tickets: ${error.message}`,
+      message: "Server Error",
       error: error.message,
     });
   }
@@ -415,14 +378,70 @@ exports.updateTicket = async (req, res) => {
 // Delete ticket by ID
 exports.deleteTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    const admin = req.admin; // From verifyAdminToken middleware
 
-    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ticket ID format",
+      });
+    }
 
-    res
-      .status(200)
-      .json({ success: false, message: "Ticket deleted successfully" });
+    // Find the ticket
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    // ✅ Check if the user is the default super admin
+    const isDefaultAdmin = admin.email === "pegasus25coupons@gmail.com";
+
+    // ✅ General role-based permissions
+    const isAdmin = admin.role?.role_id === "1"; // Admin role
+    const isCreator = ticket.created_by.toString() === admin._id.toString();
+
+    // ❌ If not admin, not creator, and not default admin → block
+    if (!isAdmin && !isCreator && !isDefaultAdmin) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Unauthorized - Only admin, creator, or default admin can delete",
+      });
+    }
+
+    // Delete the ticket
+    const deletedTicket = await Ticket.findByIdAndDelete(id);
+
+    // Update report if deleted by creator (optional logic)
+    if (isCreator) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      await Report.updateOne(
+        { admin_id: admin._id, report_date: today },
+        { $pull: { show_ids: ticket.show_id } }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ticket deleted successfully",
+      data: {
+        deletedTicketId: deletedTicket._id,
+        showId: deletedTicket.show_id,
+        userId: deletedTicket.user_id,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Delete ticket error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting ticket",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };

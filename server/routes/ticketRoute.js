@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const ticketController = require('../controllers/ticketController');
+const { verifyAdminToken } = require('../middleware/auth');
 
 // Create ticket
 router.post('/create-ticket', ticketController.createTicket);
+
 router.get('/count/:user_id/:show_id', ticketController.getTicketCount);
 
 // Get all tickets
@@ -14,8 +16,7 @@ router.get('/:id', ticketController.getTicketById);
 
 // Update ticket by ID
 router.put('/update-ticket/:id', ticketController.updateTicket);
-
 // Delete ticket by ID
-router.delete('/delete-ticket/:id', ticketController.deleteTicket);
+router.delete('/delete-ticket/:id',verifyAdminToken,ticketController.deleteTicket);
 
 module.exports = router;

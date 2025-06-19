@@ -17,7 +17,7 @@ const BrandList = () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/brands/fetch-all-brands`);
             setBrands(res.data.data);
-            console.log(res, 'brand');
+   
             // toast.success(res.data.message || "Title sponsors fetched successfully");
         } catch (error) {
             console.error('Error fetching brands:', error);

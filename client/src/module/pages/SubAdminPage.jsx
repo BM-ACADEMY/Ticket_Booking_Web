@@ -53,7 +53,7 @@ const SubAdminPage = () => {
         });
         const adminRole = res.data?.roles?.find((r) => r.name === "subAdmin");
         if (adminRole) {
-          toast.success("Role fetched successfully");
+          // toast.success("Role fetched successfully");
           setForm((prev) => ({ ...prev, role: adminRole.name, role_id: adminRole.role_id }));
           setRoleId(adminRole.role_id);
         }

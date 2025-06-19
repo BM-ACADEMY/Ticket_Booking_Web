@@ -2,11 +2,12 @@ const User = require("../models/userModel");
 const Ticket = require("../models/ticketModel");
 const Show = require("../models/showModel");
 
-
-
 exports.getDashboardStats = async (req, res) => {
   try {
     const { filter = "month" } = req.query;
+    const admin = req.admin;
+    const roleName = admin.role.name;
+    const adminId = admin._id;
 
     const now = new Date();
     let matchDate = {};
@@ -30,8 +31,13 @@ exports.getDashboardStats = async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalShows = await Show.countDocuments();
 
+    let ticketQuery = { ...matchDate };
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      ticketQuery.created_by = adminId;
+    }
+
     const ticketStats = await Ticket.aggregate([
-      { $match: matchDate },
+      { $match: ticketQuery },
       {
         $group: {
           _id: null,
@@ -41,18 +47,18 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // ✅ Today payment breakdown
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
+    let todayPaymentQuery = { created_at: { $gte: todayStart, $lte: todayEnd } };
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      todayPaymentQuery.created_by = adminId;
+    }
+
     const todayPaymentStats = await Ticket.aggregate([
-      {
-        $match: {
-          created_at: { $gte: todayStart, $lte: todayEnd },
-        },
-      },
+      { $match: todayPaymentQuery },
       {
         $group: {
           _id: "$payment_method",
@@ -60,8 +66,14 @@ exports.getDashboardStats = async (req, res) => {
         },
       },
     ]);
+
+    let totalPaymentQuery = {};
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      totalPaymentQuery.created_by = adminId;
+    }
 
     const totalPaymentStats = await Ticket.aggregate([
+      { $match: totalPaymentQuery },
       {
         $group: {
           _id: "$payment_method",
@@ -70,9 +82,8 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Format breakdowns
     const formatPayments = (stats) => {
-      const methods = ['GPay', 'Cash', 'Mess Bill'];
+      const methods = ["GPay", "Cash", "Mess Bill"];
       const result = {};
       methods.forEach((method) => {
         const entry = stats.find((s) => s._id === method);
@@ -81,46 +92,149 @@ exports.getDashboardStats = async (req, res) => {
       return result;
     };
 
+    let monthlyDataQuery = {
+      created_at: {
+        $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1),
+      },
+    };
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      monthlyDataQuery.created_by = adminId;
+    }
+
+    const monthlyData = await Ticket.aggregate([
+      { $match: monthlyDataQuery },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$created_at" },
+            month: { $month: "$created_at" },
+          },
+          revenue: { $sum: { $toDouble: "$amount" } },
+        },
+      },
+      {
+        $project: {
+          name: {
+            $concat: [
+              { $toString: "$_id.month" },
+              "-",
+              { $toString: "$_id.year" },
+            ],
+          },
+          revenue: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    // ========================== Show-wise ticket stats ==========================
+
+    let showTicketQuery = {};
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      showTicketQuery.created_by = adminId;
+    }
+
+    const overallShowTicketStats = await Ticket.aggregate([
+      { $match: showTicketQuery },
+      {
+        $group: {
+          _id: "$show_id",
+          totalTickets: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "shows",
+          localField: "_id",
+          foreignField: "_id",
+          as: "show",
+        },
+      },
+      { $unwind: "$show" },
+      {
+        $project: {
+          showId: "$show._id",
+          showTitle: "$show.title", // ✅ Correct field
+          totalTickets: 1,
+        },
+      },
+    ]);
+
+    const todayShowTicketQuery = {
+      created_at: { $gte: todayStart, $lte: todayEnd },
+    };
+    if (roleName === "subAdmin" || roleName === "Checker") {
+      todayShowTicketQuery.created_by = adminId;
+    }
+
+    const todayShowTicketStats = await Ticket.aggregate([
+      { $match: todayShowTicketQuery },
+      {
+        $group: {
+          _id: "$show_id",
+          todayTickets: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "shows",
+          localField: "_id",
+          foreignField: "_id",
+          as: "show",
+        },
+      },
+      { $unwind: "$show" },
+      {
+        $project: {
+          showId: "$show._id",
+          showTitle: "$show.title", // ✅ Correct field
+          todayTickets: 1,
+        },
+      },
+    ]);
+
+    const combineShowStats = () => {
+      const map = {};
+
+      overallShowTicketStats.forEach((item) => {
+        map[item.showId.toString()] = {
+          showId: item.showId,
+          showTitle: item.showTitle,
+          totalTickets: item.totalTickets,
+          todayTickets: 0,
+        };
+      });
+
+      todayShowTicketStats.forEach((item) => {
+        const id = item.showId.toString();
+        if (!map[id]) {
+          map[id] = {
+            showId: item.showId,
+            showTitle: item.showTitle,
+            totalTickets: 0,
+            todayTickets: item.todayTickets,
+          };
+        } else {
+          map[id].todayTickets = item.todayTickets;
+        }
+      });
+
+      return Object.values(map);
+    };
+
+    // ========================== Final Response ==========================
+
     const stats = {
       totalUsers,
       totalShows,
       totalTickets: ticketStats[0]?.totalTickets || 0,
       totalTurnover: ticketStats[0]?.totalTurnover || 0,
       confirmedTickets: 0,
-      monthlyData: await Ticket.aggregate([
-        {
-          $match: {
-            created_at: {
-              $gte: new Date(now.getFullYear() - 1, now.getMonth(), 1),
-            },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              year: { $year: "$created_at" },
-              month: { $month: "$created_at" },
-            },
-            revenue: { $sum: { $toDouble: "$amount" } },
-          },
-        },
-        {
-          $project: {
-            name: {
-              $concat: [
-                { $toString: "$_id.month" },
-                "-",
-                { $toString: "$_id.year" },
-              ],
-            },
-            revenue: 1,
-            _id: 0,
-          },
-        },
-        { $sort: { name: 1 } },
-      ]),
+      monthlyData,
       todayPayments: formatPayments(todayPaymentStats),
       totalPayments: formatPayments(totalPaymentStats),
+      showWiseStats: combineShowStats(),
     };
 
     res.status(200).json({

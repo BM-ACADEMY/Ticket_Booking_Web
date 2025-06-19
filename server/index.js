@@ -28,14 +28,14 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com"],
+    origin: [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com","https://pegasustix.com"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
 app.use((req, res, next) => {
-    const allowedOrigins = [process.env.FRONTEND_URL, process.env.PRODUCTION_URL];
+    const allowedOrigins = [process.env.FRONTEND_URL, process.env.PRODUCTION_URL,"https://www.pegasustix.com","https://pegasustix.com"]
     const origin = req.headers.origin;
     
     if (allowedOrigins.includes(origin)) {

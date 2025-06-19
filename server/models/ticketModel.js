@@ -27,10 +27,8 @@ const ticketSchema = new mongoose.Schema(
     },
     qr_code_link: {
       type: String,
-      // required: true,
       default: null,
     },
-    // is_combo: { type: Boolean, default: false },
     payment_method: {
       type: String,
       enum: ["GPay", "Cash", "Mess Bill"],

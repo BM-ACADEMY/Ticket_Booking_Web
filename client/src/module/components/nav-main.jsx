@@ -22,7 +22,7 @@ import {
 
 export function NavMain({ items }) {
 
-  console.log("NavMain items:", items);
+
   
   return (
     <SidebarGroup  style={{backgroundColor:"#030049"}}>

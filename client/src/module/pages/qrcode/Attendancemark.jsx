@@ -13,6 +13,7 @@ const AttendanceMark = () => {
   const { user_id, show_id } = useParams();
   const { userInfo } = useUser();
   const { user } = useAuth();
+  const [userDetails, setUserDetails] = useState(null);
 
   const [ticketCount, setTicketCount] = useState(0);
   const [memberCount, setMemberCount] = useState("");
@@ -21,45 +22,63 @@ const AttendanceMark = () => {
   const [isAuthorized, setIsAuthorized] = useState(null); // null = loading state
 
   // Check role and fetch attendance info
-  useEffect(() => {
-    if (!user) return; // Wait for user to load
+// ✅ Fetch user details based on user_id (independent useEffect)
+useEffect(() => {
+  if (!user_id) return;
 
-    const validRoles = ["admin", "subadmin", "checker"];
-    const userRole = user?.role?.name?.toLowerCase();
-
-    console.log("User Role:", userRole);
-
-    if (!userRole || !validRoles.includes(userRole)) {
-      setIsAuthorized(false);
-      toast.error("Access denied: You are not authorized to mark attendance.");
-      return;
+  const fetchUserDetails = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/fetch-all-user-by-id/${user_id}`);
+      setUserDetails(res.data.data);
+    } catch (err) {
+      toast.error("Failed to load user details");
     }
+  };
 
-    setIsAuthorized(true); // ✅ Authorized
+  fetchUserDetails();
+}, [user_id]);
 
-    const fetchData = async () => {
-      try {
-        const ticketRes = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/tickets/count/${user_id}/${show_id}`
-        );
-        setTicketCount(ticketRes.data.ticket_count);
+// ✅ Main useEffect for role check and attendance fetch
+useEffect(() => {
+  if (!user) return; // Wait for user to load
 
-        const attRes = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/attendance/fetch-attendance-by-user-show/${user_id}/${show_id}`
-        );
-        if (attRes.data.attendance) {
-          const { attendance: att } = attRes.data;
-          setAttendance(att);
-          setMemberCount(att.member_count);
-          setNotes(att.notes ?? "");
-        }
-      } catch (err) {
-        toast.error("Failed to load attendance info");
+  const validRoles = ["admin", "subadmin", "checker"];
+  const userRole = user?.role?.name?.toLowerCase();
+
+
+
+  if (!userRole || !validRoles.includes(userRole)) {
+    setIsAuthorized(false);
+    toast.error("Access denied: You are not authorized to mark attendance.");
+    return;
+  }
+
+  setIsAuthorized(true); // ✅ Authorized
+
+  const fetchData = async () => {
+    try {
+      const ticketRes = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/tickets/count/${user_id}/${show_id}`
+      );
+      setTicketCount(ticketRes.data.ticket_count);
+
+      const attRes = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/attendance/fetch-attendance-by-user-show/${user_id}/${show_id}`
+      );
+      if (attRes.data.attendance) {
+        const { attendance: att } = attRes.data;
+        setAttendance(att);
+        setMemberCount(att.member_count);
+        setNotes(att.notes ?? "");
       }
-    };
+    } catch (err) {
+      toast.error("Failed to load attendance info");
+    }
+  };
 
-    fetchData();
-  }, [user, user_id, show_id]);
+  fetchData();
+}, [user, user_id, show_id]);
+
 
   const handleMark = async () => {
     try {
@@ -103,6 +122,26 @@ const AttendanceMark = () => {
 
   return (
     <div className="max-w-md mx-auto p-6 space-y-6">
+
+      {userDetails && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          viewport={{ once: true }}
+        >
+          <Card className="mb-4 p-4 space-y-2">
+            <h2 className="text-lg font-semibold">User Details</h2>
+            <p><strong>Name:</strong> {userDetails.name}</p>
+            <p><strong>Phone:</strong> {userDetails.phone}</p>
+            <p><strong>Notes:</strong> {userDetails.notes || "N/A"}</p>
+            <p><strong>QR ID:</strong> {userDetails.qr_id || "N/A"}</p>
+            <p><strong>Offline:</strong> {userDetails.is_offline ? "Yes" : "No"}</p>
+            <p><strong>Created At:</strong> {userDetails.created_at ? new Date(userDetails.created_at).toLocaleString() : "N/A"}</p>
+          </Card>
+        </motion.div>
+      )}
+
       {userInfo && (
         <motion.div
           initial={{ opacity: 0, y: 30 }}

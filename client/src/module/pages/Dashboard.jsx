@@ -16,40 +16,57 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useAuth } from "../context/AuthContext";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table"
 
 const Dashboard = () => {
+  const { user } = useAuth();
+
   const [stats, setStats] = useState({
     totalUsers: 0,
-
-
     totalShows: 0,
     totalTickets: 0,
     totalTurnover: 0,
     confirmedTickets: 0,
     monthlyData: [],
+    todayPayments: {},
+    totalPayments: {},
+    showWiseStats: [],
   });
 
+  const [roleFilter, setRoleFilter] = useState("");
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/dashboard/dashboarddata?filter=month${roleFilter ? `&roleFilter=${roleFilter}` : ""}`,
+        { withCredentials: true }
+      );
+      setStats(response.data.data);
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/dashboard/dashboarddata?filter=month`,
-          { withCredentials: true }
-        );
-        setStats(response.data.data);
-      } catch (error) {
-        console.error("Error fetching dashboard:", error);
-      }
-    };
     fetchStats();
-  }, []);
+  }, [roleFilter]);
 
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "#030049" }}>Dashboard</h1>
+        style={{ backgroundColor: "#030049" }}>
+        Dashboard
+      </h1>
 
-      {/* Overview cards */}
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader>
@@ -91,9 +108,46 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Show-wise Ticket Sales Breakdown */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Show-wise Ticket Sales</CardTitle>
+          <CardDescription>Overall and Today’s ticket count per show</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {stats.showWiseStats.length === 0 ? (
+            <p className="text-gray-500 text-sm">No data available.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted">
+                    <TableHead>Show Title</TableHead>
+                    <TableHead>Total Tickets</TableHead>
+                    <TableHead>Today’s Tickets</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.showWiseStats.map((show, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{show.showTitle}</TableCell>
+                      <TableCell>{show.totalTickets}</TableCell>
+                      <TableCell>{show.todayTickets}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Today’s Payments Breakdown */}
-      <h2 className="text-xl font-semibold mb-4 mt-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "#030049" }}>Today’s Payment Breakdown</h2>
+      <h2 className="text-xl font-semibold mb-4 mt-6 text-center text-white p-2 rounded-sm"
+        style={{ backgroundColor: "#030049" }}>
+        Today’s Payment Breakdown
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {["GPay", "Cash", "Mess Bill"].map((method) => (
           <Card key={method}>
@@ -112,7 +166,9 @@ const Dashboard = () => {
 
       {/* Total Payments Breakdown */}
       <h2 className="text-xl font-semibold mt-4 mb-4 text-center text-white p-2 rounded-sm"
-        style={{ backgroundColor: "#030049" }}>Total Payment Breakdown</h2>
+        style={{ backgroundColor: "#030049" }}>
+        Total Payment Breakdown
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {["GPay", "Cash", "Mess Bill"].map((method) => (
           <Card key={method}>
@@ -129,13 +185,12 @@ const Dashboard = () => {
         ))}
       </div>
 
-
-      {/* Recharts Area Chart for Monthly Sales */}
+      {/* Monthly Sales Chart */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Monthly Sales Overview</CardTitle>
           <CardDescription>Total Turnover per Month (in ₹)</CardDescription>
-          exemplo         </CardHeader>
+        </CardHeader>
         <CardContent>
           <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>

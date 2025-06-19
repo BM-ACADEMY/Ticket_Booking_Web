@@ -17,7 +17,7 @@ const BrandAssociateList = () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/associate-brand/fetch-all-brand-associates`);
             setBrandAssociates(res.data.data);
-            console.log(res, 'brandAssociate');
+
             // toast.success(res.data.message || "Associate sponsors fetched successfully");
         } catch (error) {
             console.error('Error fetching brand associates:', error);
