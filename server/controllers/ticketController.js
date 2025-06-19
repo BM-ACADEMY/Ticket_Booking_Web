@@ -67,18 +67,37 @@ exports.createTicket = async (req, res) => {
           continue;
         }
 
-        const formattedShowDate = new Date(show.datetime).toLocaleString("en-IN", {
+        // Format date & time separately to avoid commas
+        // Format date manually (no commas)
+        const dateObj = new Date(show.datetime);
+        const weekday = dateObj.toLocaleDateString("en-IN", {
           weekday: "short",
-          year: "numeric",
+          timeZone: "Asia/Kolkata",
+        });
+        const day = dateObj.getDate();
+        const month = dateObj.toLocaleDateString("en-IN", {
           month: "short",
-          day: "numeric",
-          hour: "numeric",
+          timeZone: "Asia/Kolkata",
+        });
+        const year = dateObj.getFullYear();
+        const time = dateObj.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
           minute: "2-digit",
           hour12: true,
           timeZone: "Asia/Kolkata",
         });
 
+        // Final string (space-separated, no commas)
+        const formattedShowDate = `${weekday} ${day} ${month} ${year} ${time}`;
+
         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
+
+        // Sanitize inputs to remove commas that might break parameter structure
+        const safeUserName = (user.name || "Pegasus 2k25").replace(/,/g, "");
+        const safeTitle = (show.title || "Pegasus@123").replace(/,/g, "");
+        const safeLocation = (show.location || "Venue").replace(/,/g, "");
+        const safeLink = (viewLink || "").replace(/,/g, "");
+
         const params = {
           user: "Mohithvarshan_rcs",
           pass: "123456",
@@ -88,14 +107,15 @@ exports.createTicket = async (req, res) => {
           priority: "wa",
           stype: "normal",
           Params: [
-            user.name || "Pegasus 2k25",
+            safeUserName,
             ticket.ticket_count || "0",
-            show.title || "Pegasus@123",
-            formattedShowDate || "2025",
-            show.location,
-            viewLink,
+            safeTitle,
+            formattedShowDate,
+            safeLocation,
+            safeLink,
           ].join(","),
         };
+        console.log(params, "params");
 
         const response = await axios.get(apiUrl, { params });
         console.log("Response Status:", response.status);
@@ -103,15 +123,22 @@ exports.createTicket = async (req, res) => {
 
         if (response.status === 200) {
           if (response.data.trim() === "") {
-            console.warn(`⚠️ Empty response for ${user.phone}. Check template or API config.`);
+            console.warn(
+              `⚠️ Empty response for ${user.phone}. Check template or API config.`
+            );
           } else {
             console.log(`📤 WhatsApp sent to ${user.phone}:`, response.data);
           }
         } else {
-          console.warn(`⚠️ Unexpected status for ${user.phone}: ${response.status}`);
+          console.warn(
+            `⚠️ Unexpected status for ${user.phone}: ${response.status}`
+          );
         }
       } catch (error) {
-        console.error(`❌ WhatsApp message failed for ${user.phone}:`, error.response?.data || error.message);
+        console.error(
+          `❌ WhatsApp message failed for ${user.phone}:`,
+          error.response?.data || error.message
+        );
         if (error.response) {
           console.error("Error Response:", error.response.data);
           console.error("Error Status:", error.response.status);
@@ -126,7 +153,9 @@ exports.createTicket = async (req, res) => {
     });
   } catch (error) {
     console.error("Ticket creation error:", error);
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
