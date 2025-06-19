@@ -5,6 +5,7 @@ const { verifyAdminToken } = require('../middleware/auth');
 
 // Create ticket
 router.post('/create-ticket', ticketController.createTicket);
+
 router.get('/count/:user_id/:show_id', ticketController.getTicketCount);
 
 // Get all tickets

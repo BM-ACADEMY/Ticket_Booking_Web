@@ -106,17 +106,17 @@ exports.getUserById = async (req, res) => {
 exports.getUserTicketsByQRCode = async (req, res) => {
   try {
     const { qrcode } = req.params;
-    console.log(`Fetching user with qr_id: ${qrcode}`);
+
 
     // Find user by qr_id
     const user = await mongoose.model("User").findOne({ qr_id: qrcode });
     if (!user) {
-      console.log(`No user found for qr_id: ${qrcode}`);
+
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    console.log(`User found: _id=${user._id}, name=${user.name}`);
+
 
     // Aggregate tickets for the user
     const data = await mongoose.model("Ticket").aggregate([
@@ -181,7 +181,7 @@ exports.getUserTicketsByQRCode = async (req, res) => {
     ]);
 
     if (!data[0]) {
-      console.log(`No tickets found for user: _id=${user._id}`);
+
       // Return user data with empty shows array
       return res.status(200).json({
         success: true,
@@ -201,9 +201,7 @@ exports.getUserTicketsByQRCode = async (req, res) => {
     // Filter out invalid shows (e.g., where show lookup failed)
     data[0].shows = data[0].shows.filter((show) => show.show_id);
 
-    console.log(
-      `Tickets found for user: _id=${user._id}, shows=${data[0].shows.length}`
-    );
+
     return res.status(200).json({ success: true, data: data[0] });
   } catch (err) {
     console.error(`Error fetching tickets for qr_id: ${qrcode}`, err);
@@ -887,7 +885,7 @@ exports.getAdminsAndSubAdmins = async (req, res) => {
         },
       },
     ]);
-    console.log(creators, "cre");
+
 
     const mappedCreators = creators.map((creator) => ({
       _id: creator._id,

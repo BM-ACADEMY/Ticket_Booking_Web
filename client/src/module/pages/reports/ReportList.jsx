@@ -16,7 +16,7 @@ const ReportList = () => {
           `${import.meta.env.VITE_BASE_URL}/reports/fetch-all-report?adminId=${user?._id}`,
           { withCredentials: true }
         );
-        console.log("API Response:", res.data.reports);
+
         setReports(res.data.reports || []);
         calledOnceRef.current = true;
       } catch (err) {

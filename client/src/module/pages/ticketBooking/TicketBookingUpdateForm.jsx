@@ -426,8 +426,6 @@ const TicketBookingUpdateForm = ({ shows, editData = null, onClose }) => {
       })),
     };
 
-    console.log("Sending update request with userId:", userId);
-    console.log("Update payload:", updatePayload);
 
     // Call the update API
     const response = await axios.put(

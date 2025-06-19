@@ -118,7 +118,7 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
-  console.log("AppSidebar user:", user);
+
   
   const role = user?.role?.name
   // Filter navMain based on role

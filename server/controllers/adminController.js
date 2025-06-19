@@ -463,8 +463,7 @@ exports.getAdminById = async (req, res) => {
 exports.createAdmin = async (req, res) => {
   try {
     const { name, email, phone, password, confirmPassword, role_id } = req.body;
-    console.log(req.body, "create admin body");
-    
+
     // Check if password and confirmPassword match
     if (password !== confirmPassword) {
       return res

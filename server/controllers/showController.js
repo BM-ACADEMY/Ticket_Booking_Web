@@ -53,7 +53,7 @@ exports.getShowById = async (req, res) => {
   exports.createShow = async (req, res) => {
     try {
       const { title, location, datetime,price } = req.body;
-      console.log(req.body,"dlfnd");
+
       
       let logoPath = "";
 

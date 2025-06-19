@@ -16,7 +16,7 @@ const ForgotPasswordForm = () => {
         withCredentials: true // Ensure cookies are sent with the request
       })
       toast.success("Password reset link sent to your email!")
-      console.log("Response from forgot password:", res)
+
       setStatus("Email sent! Check your inbox.")
     } catch (err) {
       toast.error("Failed to send reset link. Please check your email.")

@@ -144,38 +144,61 @@ exports.createTicket = async (req, res) => {
     for (const ticket of tickets) {
       try {
         const show = await Show.findById(ticket.show_id);
-        if (!show) continue;
+        if (!show) {
+          console.warn(`⚠️ Show not found for ticket ${ticket._id}`);
+          continue;
+        }
 
-        // 👇 Fill the placeholders with values
-        const template1 = encodeURIComponent("Pegasus 2k25"); // {{1}} Welcome title
-        const template2 = encodeURIComponent(user.email || user.phone); // {{2}} username (whatever you're using)
+        const template1 = encodeURIComponent("Pegasus 2k25");
+        const template2 = encodeURIComponent(user.email || user.phone);
         const template3 = encodeURIComponent(
           ticket.ticket_code || "Pegasus@123"
-        ); // {{3}} password or code
-
-        const finalText = `Thank%20You%20for%20registration.%20Welcome%20to%20${template1}.%20Your%20login%20details%20username:%20${template2},%20Password:%20${template3}`;
+        );
 
         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
         const params = {
           user: "Mohithvarshan_rcs",
           pass: "123456",
           sender: "BUZWAP",
-          phone: `91${user.phone}`, // Must include country code
-          text: finalText,
+          phone: `91${user.phone}`,
+          text: "mohit_5654",
           priority: "wa",
           stype: "normal",
+          Params: [
+            "Pegasus 2k25",
+            user.email || user.phone,
+            ticket.ticket_code || "Pegasus@123",
+          ].join(","),
         };
 
         const response = await axios.get(apiUrl, { params });
-        console.log(
-          `📤 WhatsApp sent using approved template to ${user.phone}:`,
-          response.data
-        );
+        console.log("Response Status:", response.status);
+        console.log("Response Data:", JSON.stringify(response.data));
+
+        if (response.status === 200) {
+          if (response.data.trim() === "") {
+            console.warn(
+              `⚠️ Empty response for ${user.phone}. Check template 'mohit_5654' or API configuration.`
+            );
+          } else {
+            console.log(`📤 WhatsApp sent to ${user.phone}:`, response.data);
+          }
+        } else {
+          console.warn(
+            `⚠️ Unexpected status for ${user.phone}: ${response.status}`
+          );
+        }
       } catch (error) {
-        console.error("❌ WhatsApp message failed:", error.message);
+        console.error(
+          `❌ WhatsApp message failed for ${user.phone}:`,
+          error.response?.data || error.message
+        );
+        if (error.response) {
+          console.error("Error Response:", error.response.data);
+          console.error("Error Status:", error.response.status);
+        }
       }
     }
-
     return res.status(201).json({
       success: true,
       message: "Ticket(s) created and SMS sent",
@@ -192,7 +215,6 @@ exports.createTicket = async (req, res) => {
 exports.getTicketCount = async (req, res) => {
   try {
     const { user_id, show_id } = req.params;
-    console.log(req.params, "params");
 
     const count = await Ticket.aggregate([
       {
@@ -387,7 +409,8 @@ exports.deleteTicket = async (req, res) => {
     if (!isAdmin && !isCreator && !isDefaultAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Unauthorized - Only admin, creator, or default admin can delete",
+        message:
+          "Unauthorized - Only admin, creator, or default admin can delete",
       });
     }
 
@@ -422,4 +445,3 @@ exports.deleteTicket = async (req, res) => {
     });
   }
 };
-

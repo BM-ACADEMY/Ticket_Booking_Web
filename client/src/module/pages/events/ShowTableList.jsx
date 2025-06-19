@@ -49,7 +49,7 @@ export default function EventListTable({ onEdit }) {
                 });
                 toast.success("Shows fetched successfully");
                 setShows(response.data.data || []);
-                console.log("Fetched shows:", response.data.data);
+
 
             } catch (error) {
                 toast.error("Failed to fetch shows",
