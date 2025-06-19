@@ -9,27 +9,6 @@ const Report = require("../models/reportsModel");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
-// Create new ticket
-// Create new ticket(s)
-// exports.createTicket = async (req, res) => {
-//   try {
-//     const payload = req.body;
-
-//     if (!Array.isArray(payload)) {
-//       // If it's a single ticket, insert one
-//       const ticket = new Ticket(payload);
-//       await ticket.save();
-//       return res.status(201).json({ success: true, message: 'Ticket created successfully', ticket });
-//     } else {
-//       // If it's an array of tickets, insert many
-//       const tickets = await Ticket.insertMany(payload);
-//       return res.status(201).json({ success: true, message: 'Tickets created successfully', tickets });
-//     }
-
-//   } catch (error) {
-//     res.status(500).json({ success: false, error: error.message });
-//   }
-// };
 
 exports.createTicket = async (req, res) => {
   try {
@@ -46,22 +25,11 @@ exports.createTicket = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
 
-    // Generate QR Code
+    // ⛔️ Removed QR code image generation
     const qrData = user.qr_id;
-    const qrFileName = `qr-${user._id}-${Date.now()}.png`;
-    const qrDirPath = path.join(__dirname, "../public/qrcodes");
-
-    // ✅ Ensure directory exists
-    if (!fs.existsSync(qrDirPath)) {
-      fs.mkdirSync(qrDirPath, { recursive: true });
-    }
-
-    const qrFilePath = path.join(qrDirPath, qrFileName);
     const viewLink = `${process.env.FRONTEND_QRCODE_URL}/${qrData}`;
 
-    // Save QR code image
-    await QRCode.toFile(qrFilePath, qrData);
-
+    // Prepare payload (attach QR link if needed)
     const finalPayload = Array.isArray(payload)
       ? payload.map((p) => ({ ...p, qr_code_link: viewLink }))
       : { ...payload, qr_code_link: viewLink };
@@ -74,73 +42,23 @@ exports.createTicket = async (req, res) => {
       await ticket.save();
       tickets = [ticket];
     }
-    const showIds = [...new Set(finalPayload.map((t) => t.show_id.toString()))]; // Unique show IDs
+
+    // Update report
+    const showIds = [...new Set(finalPayload.map((t) => t.show_id.toString()))];
     const adminId = firstPayload.created_by;
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to start of day
+    today.setHours(0, 0, 0, 0);
 
     await Report.findOneAndUpdate(
       { admin_id: adminId, report_date: today },
       {
-        $addToSet: { show_ids: { $each: showIds } }, // avoid duplicate shows
+        $addToSet: { show_ids: { $each: showIds } },
         $setOnInsert: { generated_at: new Date() },
       },
       { upsert: true, new: true }
     );
-    // Loop through each ticket and send SMS
-    //     for (const ticket of tickets) {
-    //       try {
-    //         const show = await Show.findById(ticket.show_id);
-    //         if (!show) continue;
 
-    //         const ticketDate = new Date(ticket.created_at).toLocaleString("en-IN");
-    //         const showDate = new Date(show.datetime).toLocaleString("en-IN");
-
-    //         // 🎟️ WhatsApp Message (with emojis and dynamic content)
-    //         const message = `Hi ${
-    //           user.name
-    //         } 😊, welcome to Pegasus 2k25 – the crown jewel of CMC! 👑
-
-    // 🎟️ You have successfully booked ${ticket.ticket_count} ticket(s) for *${
-    //           show.title
-    //         }*, scheduled on *${showDate}* at *${show.location}*.
-
-    // 🔗 Your e-ticket: ${viewLink}
-
-    // ⚠️ Please show the e-ticket at entry.
-
-    // 💳 Payment of ₹${parseFloat(ticket.amount)} via *${
-    //           ticket.payment_method
-    //         }* received on *${ticketDate}*.
-
-    // 🍴 To access the exclusive Pegasus Food Court all week, register here:
-    // [Food Court Link]
-
-    // 🛵 Prefer doorstep delivery? We deliver to Bagayam & Rehab campuses only!`;
-
-    //         const encodedMessage = encodeURIComponent(message); // Encode emojis, line breaks, etc.
-
-    //         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
-    //         const params = {
-    //           user: "Mohithvarshan_rcs",
-    //           pass: "123456",
-    //           sender: "BUZWAP",
-    //           phone: `91${user.phone}`, // 📱 Dynamic phone number
-    //           text: encodedMessage,
-    //           priority: "wa", // WhatsApp
-    //           stype: "normal",
-    //         };
-
-    //         const response = await axios.get(apiUrl, { params });
-    //         console.log(
-    //           `📤 WhatsApp sent for show "${show.title}" to ${user.phone}:`,
-    //           response.data
-    //         );
-    //       } catch (error) {
-    //         console.error("❌ Error sending WhatsApp message:", error.message);
-    //       }
-    //     }
-
+    // Send WhatsApp Message
     for (const ticket of tickets) {
       try {
         const show = await Show.findById(ticket.show_id);
@@ -149,11 +67,16 @@ exports.createTicket = async (req, res) => {
           continue;
         }
 
-        const template1 = encodeURIComponent("Pegasus 2k25");
-        const template2 = encodeURIComponent(user.email || user.phone);
-        const template3 = encodeURIComponent(
-          ticket.ticket_code || "Pegasus@123"
-        );
+        const formattedShowDate = new Date(show.datetime).toLocaleString("en-IN", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata",
+        });
 
         const apiUrl = "http://bhashsms.com/api/sendmsgutil.php";
         const params = {
@@ -165,9 +88,12 @@ exports.createTicket = async (req, res) => {
           priority: "wa",
           stype: "normal",
           Params: [
-            "Pegasus 2k25",
-            user.email || user.phone,
-            ticket.ticket_code || "Pegasus@123",
+            user.name || "Pegasus 2k25",
+            ticket.ticket_count || "0",
+            show.title || "Pegasus@123",
+            formattedShowDate || "2025",
+            show.location,
+            viewLink,
           ].join(","),
         };
 
@@ -177,38 +103,30 @@ exports.createTicket = async (req, res) => {
 
         if (response.status === 200) {
           if (response.data.trim() === "") {
-            console.warn(
-              `⚠️ Empty response for ${user.phone}. Check template 'mohit_5654' or API configuration.`
-            );
+            console.warn(`⚠️ Empty response for ${user.phone}. Check template or API config.`);
           } else {
             console.log(`📤 WhatsApp sent to ${user.phone}:`, response.data);
           }
         } else {
-          console.warn(
-            `⚠️ Unexpected status for ${user.phone}: ${response.status}`
-          );
+          console.warn(`⚠️ Unexpected status for ${user.phone}: ${response.status}`);
         }
       } catch (error) {
-        console.error(
-          `❌ WhatsApp message failed for ${user.phone}:`,
-          error.response?.data || error.message
-        );
+        console.error(`❌ WhatsApp message failed for ${user.phone}:`, error.response?.data || error.message);
         if (error.response) {
           console.error("Error Response:", error.response.data);
           console.error("Error Status:", error.response.status);
         }
       }
     }
+
     return res.status(201).json({
       success: true,
-      message: "Ticket(s) created and SMS sent",
+      message: "Ticket(s) created and WhatsApp sent",
       data: tickets,
     });
   } catch (error) {
     console.error("Ticket creation error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
