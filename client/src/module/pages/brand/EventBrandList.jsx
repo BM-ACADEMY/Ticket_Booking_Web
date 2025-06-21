@@ -28,28 +28,40 @@ const EventBrandList = () => {
         fetchEventBrands();
     }, []);
 
-    const handleCreateOrUpdate = async (formData) => {
-        try {
-            if (selectedEventBrand) {
-                const res = await axios.put(
-                    `${import.meta.env.VITE_BASE_URL}/event-brand/update-event-brand/${selectedEventBrand._id}`,
-                    formData
-                );
-                toast.success(res.data.message || "Event sponsor updated successfully");
-            } else {
-                const res = await axios.post(
-                    `${import.meta.env.VITE_BASE_URL}/event-brand/create-event-brand`,
-                    formData
-                );
-                toast.success(res.data.message || "Event sponsor added successfully");
-            }
-            await fetchEventBrands(); // Refresh the list
-        } catch (err) {
-            console.error("Error saving event brand:", err);
-            toast.error(err.response?.data?.message || "Something went wrong");
-            throw err; // Re-throw to let EventBrandFormDialog handle it
+   const handleCreateOrUpdate = async (formData) => {
+    try {
+        const config = {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+            withCredentials: true, // ✅ VERY IMPORTANT
+        };
+
+        let res;
+        if (selectedEventBrand) {
+            res = await axios.put(
+                `${import.meta.env.VITE_BASE_URL}/event-brand/update-event-brand/${selectedEventBrand._id}`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Event sponsor updated successfully");
+        } else {
+            res = await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/event-brand/create-event-brand`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Event sponsor added successfully");
         }
-    };
+
+        await fetchEventBrands(); // Refresh the list
+    } catch (err) {
+        console.error("Error saving event brand:", err);
+        toast.error(err.response?.data?.message || "Something went wrong");
+        throw err;
+    }
+};
+
 
     const handleDelete = async () => {
         try {

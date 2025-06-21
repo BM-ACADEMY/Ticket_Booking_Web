@@ -29,28 +29,40 @@ const BrandList = () => {
         fetchBrands();
     }, []);
 
-    const handleCreateOrUpdate = async (formData) => {
-        try {
-            if (selectedBrand) {
-                const res = await axios.put(
-                    `${import.meta.env.VITE_BASE_URL}/brands/update-brand/${selectedBrand._id}`,
-                    formData
-                );
-                toast.success(res.data.message || "Title sponsor updated successfully");
-            } else {
-                const res = await axios.post(
-                    `${import.meta.env.VITE_BASE_URL}/brands/create-brand`,
-                    formData
-                );
-                toast.success(res.data.message || "Title sponsor added successfully");
-            }
-            await fetchBrands(); // Refresh the list
-        } catch (err) {
-            console.error("Error saving brand:", err);
-            toast.error(err.response?.data?.message || "Something went wrong");
-            throw err; // Propagate error to BrandFormDialog
+ const handleCreateOrUpdate = async (formData) => {
+    try {
+        const config = {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+            withCredentials: true, // ✅ Needed for CORS + cookies
+        };
+
+        let res;
+        if (selectedBrand) {
+            res = await axios.put(
+                `${import.meta.env.VITE_BASE_URL}/brands/update-brand/${selectedBrand._id}`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Title sponsor updated successfully");
+        } else {
+            res = await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/brands/create-brand`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Title sponsor added successfully");
         }
-    };
+
+        await fetchBrands();
+    } catch (err) {
+        console.error("Error saving brand:", err);
+        toast.error(err.response?.data?.message || "Something went wrong");
+        throw err;
+    }
+};
+
 
     const handleDelete = async () => {
         try {

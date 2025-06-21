@@ -62,7 +62,6 @@ export default function ShowForm({ initialData = null }) {
             toast.error("Please upload a valid image file.");
         }
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -86,19 +85,22 @@ export default function ShowForm({ initialData = null }) {
         if (formData.logo) formDataToSend.append("logo", formData.logo);
 
         try {
-            const url = initialData ? `${import.meta.env.VITE_BASE_URL}/shows/update-show/${initialData._id}` : `${import.meta.env.VITE_BASE_URL}/shows/create-show`;
+            const url = initialData
+                ? `${import.meta.env.VITE_BASE_URL}/shows/update-show/${initialData._id}`
+                : `${import.meta.env.VITE_BASE_URL}/shows/create-show`;
+
             const method = initialData ? "PUT" : "POST";
 
             const response = await fetch(url, {
                 method,
                 body: formDataToSend,
+                credentials: "include", // ✅ KEY for CORS + session cookies
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 toast.success(`Show ${initialData ? "updated" : "created"} successfully`);
-                // setTimeout(() => navigate("/shows"), 2000);
             } else {
                 toast.error(data.message || "Something went wrong.");
             }
@@ -109,6 +111,7 @@ export default function ShowForm({ initialData = null }) {
             setIsLoading(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
