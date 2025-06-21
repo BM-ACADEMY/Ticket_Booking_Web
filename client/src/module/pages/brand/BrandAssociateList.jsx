@@ -28,29 +28,40 @@ const BrandAssociateList = () => {
     useEffect(() => {
         fetchBrandAssociates();
     }, []);
+const handleCreateOrUpdate = async (formData) => {
+    try {
+        const config = {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+            withCredentials: true, // ✅ Required for sending cookies/auth across domains
+        };
 
-    const handleCreateOrUpdate = async (formData) => {
-        try {
-            if (selectedBrandAssociate) {
-                const res = await axios.put(
-                    `${import.meta.env.VITE_BASE_URL}/associate-brand/update-brand-associate/${selectedBrandAssociate._id}`,
-                    formData
-                );
-                toast.success(res.data.message || "Associate sponsor updated successfully");
-            } else {
-                const res = await axios.post(
-                    `${import.meta.env.VITE_BASE_URL}/associate-brand/create-brand-associate`,
-                    formData
-                );
-                toast.success(res.data.message || "Associate sponsor added successfully");
-            }
-            await fetchBrandAssociates(); // Refresh the list
-        } catch (err) {
-            console.error("Error saving brand associate:", err);
-            toast.error(err.response?.data?.message || "Something went wrong");
-            throw err; // Propagate error to BrandAssociateFormDialog
+        let res;
+        if (selectedBrandAssociate) {
+            res = await axios.put(
+                `${import.meta.env.VITE_BASE_URL}/associate-brand/update-brand-associate/${selectedBrandAssociate._id}`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Associate sponsor updated successfully");
+        } else {
+            res = await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/associate-brand/create-brand-associate`,
+                formData,
+                config
+            );
+            toast.success(res.data.message || "Associate sponsor added successfully");
         }
-    };
+
+        await fetchBrandAssociates(); // Refresh the list
+    } catch (err) {
+        console.error("Error saving brand associate:", err);
+        toast.error(err.response?.data?.message || "Something went wrong");
+        throw err;
+    }
+};
+
 
     const handleDelete = async () => {
         try {
