@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { CalendarIcon, ImageIcon, MapPin, Tag, Text } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Calendar24 from "@/components/ui/calendar24";
 
-export default function ShowForm({ initialData = null }) {
+export default function ShowForm({ initialData = null,onSuccess  }) {
 
 
     const [formData, setFormData] = useState({
@@ -100,6 +100,7 @@ export default function ShowForm({ initialData = null }) {
             const data = await response.json();
 
             if (response.ok) {
+                  onSuccess?.();
                 toast.success(`Show ${initialData ? "updated" : "created"} successfully`);
             } else {
                 toast.error(data.message || "Something went wrong.");
@@ -219,7 +220,7 @@ export default function ShowForm({ initialData = null }) {
 
             {/* Submit Button */}
             <div className="col-span-2">
-                <Button type="submit" disabled={isLoading} className="w-full">
+                <Button type="submit" disabled={isLoading} className="w-full cursor-pointer"  style={{ backgroundColor: "#030049" }}>
                     {isLoading ? (initialData ? "Updating..." : "Creating...") : (initialData ? "Update Show" : "Create Show")}
                 </Button>
             </div>

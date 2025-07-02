@@ -2,27 +2,14 @@ const Show = require("../models/showModel");
 
 // Get all shows
 // GET /api/shows/fetch-all-shows?page=1&limit=5
-exports.getAllShows = async (req, res) => {
+exports.getAllShowsforticketlist = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // current page
-    const limit = parseInt(req.query.limit) || 5; // items per page
-    const skip = (page - 1) * limit;
-
-    const total = await Show.countDocuments();
-    const shows = await Show.find()
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }); // Optional: sort latest first
+    const shows = await Show.find().sort({ createdAt: -1 }); // Fetch all, newest first
 
     res.status(200).json({
       success: true,
       message: "Shows retrieved successfully",
       data: shows,
-      pagination: {
-        total,
-        page,
-        totalPages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     res.status(500).json({
@@ -32,7 +19,6 @@ exports.getAllShows = async (req, res) => {
     });
   }
 };
-
 
 // Get a single show by ID
 exports.getShowById = async (req, res) => {
@@ -110,5 +96,39 @@ exports.deleteShow = async (req, res) => {
     res.status(200).json({success:true, message: "Show deleted successfully" });
   } catch (error) {
     res.status(500).json({success:false, message: "Server error", error });
+  }
+};
+
+exports.getAllShowsforEvent = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;          // current page number
+    const limit = parseInt(req.query.limit) || 10;       // number of records per page
+    const skip = (page - 1) * limit;
+
+    const total = await Show.countDocuments();           // total number of shows
+
+    const shows = await Show.find()
+      .sort({ createdAt: -1 })                           // newest first
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      message: "Shows retrieved successfully",
+      data: shows,
+      pagination: {
+        total,                                           // total records
+        page,                                            // current page
+        limit,                                           // items per page
+        totalPages: Math.ceil(total / limit),           // total pages
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching shows:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
